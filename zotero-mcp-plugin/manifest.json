@@ -1,0 +1,15 @@
+{
+  "manifest_version": 2,
+  "name": "MCP Zotero API",
+  "version": "1.0.0",
+  "description": "Exposes HTTP endpoints for MCP tools to create annotations and modify Zotero items",
+  "author": "MCP Zotero",
+  "applications": {
+    "zotero": {
+      "id": "mcp-zotero-api@mcp.local",
+      "update_url": "https://example.com/updates.json",
+      "strict_min_version": "7.0.0",
+      "strict_max_version": "8.0.0"
+    }
+  }
+}
