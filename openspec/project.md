@@ -12,6 +12,7 @@ Zotero MCP is an MCP (Model Context Protocol) server providing Zotero automation
 - **Async Runtime**: Tokio
 - **Error Handling**: `thiserror` (libraries), `anyhow` (binaries)
 - **Build Environment**: Nix flakes + direnv
+- **TLS / SSL**: Rusttls
 - **Zotero Automation**: Connects to API provided by provided Zotero plugin
 
 ## Conventions
