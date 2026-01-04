@@ -70,7 +70,30 @@
               rust-analyzer
               rustToolchain
               yarn
+              # MuPDF build dependencies (for mupdf-rs crate)
+              mupdf
+              freetype
+              harfbuzz
+              libjpeg
+              jbig2dec
+              openjpeg
+              gumbo
+              mujs
+              zlib
+              openssl
+              fontconfig
+              clang
+              llvmPackages.libclang
+              gperf
+              gnumake
             ];
+
+            # Required for mupdf-sys to find the libraries
+            env = {
+              MUPDF_LIB_DIR = "${pkgs.mupdf}/lib";
+              MUPDF_INCLUDE_DIR = "${pkgs.mupdf}/include";
+              LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+            };
           };
         }
       );

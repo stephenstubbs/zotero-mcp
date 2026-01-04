@@ -1,0 +1,36 @@
+[package]
+name = "zotero-client"
+version = "0.1.0"
+edition = "2021"
+description = "Rust client library for the Zotero MCP plugin API"
+license = "MIT"
+repository = "https://github.com/yourusername/zotero-mcp"
+keywords = ["zotero", "mcp", "api", "client"]
+categories = ["api-bindings"]
+
+[features]
+default = []
+pdf = ["mupdf"]
+integration = []
+
+[dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
+
+# Optional PDF extraction using MuPDF (same library as PyMuPDF)
+# Use individual sys-lib-* features to link against system libraries
+mupdf = { version = "0.5", optional = true, features = [
+    "sys-lib-freetype",
+    "sys-lib-gumbo",
+    "sys-lib-harfbuzz", 
+    "sys-lib-jbig2dec",
+    "sys-lib-libjpeg",
+    "sys-lib-openjpeg",
+    "sys-lib-zlib",
+] }
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
