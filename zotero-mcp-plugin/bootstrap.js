@@ -552,6 +552,122 @@ function registerEndpoints() {
         }
     });
     
+    // Lookup item by BetterBibTeX citation key
+    registerEndpoint("/mcp/citekey", {
+        supportedMethods: ["POST"],
+        supportedDataTypes: ["application/json", "text/plain"],
+        init: async function(requestData, sendResponseCallback) {
+            try {
+                let data;
+                if (typeof requestData === 'object' && requestData !== null) {
+                    data = requestData;
+                } else if (typeof requestData === 'string') {
+                    try {
+                        data = JSON.parse(requestData);
+                    } catch (e) {
+                        sendResponseCallback(400, "application/json", JSON.stringify({
+                            error: "Invalid JSON",
+                            message: e.message
+                        }));
+                        return;
+                    }
+                } else {
+                    data = {};
+                }
+                
+                let citekey = data.citekey;
+                
+                if (!citekey) {
+                    sendResponseCallback(400, "application/json", JSON.stringify({
+                        error: "Missing required field: citekey"
+                    }));
+                    return;
+                }
+                
+                // Try to use BetterBibTeX API if available
+                let item = null;
+                
+                if (typeof Zotero.BetterBibTeX !== 'undefined') {
+                    // BetterBibTeX is installed - use its API
+                    try {
+                        let result = await Zotero.BetterBibTeX.KeyManager.keys.findOne({ citekey: citekey });
+                        if (result && result.itemID) {
+                            item = await Zotero.Items.getAsync(result.itemID);
+                        }
+                    } catch (e) {
+                        log("BetterBibTeX lookup failed: " + e);
+                    }
+                }
+                
+                // Fallback: search in extra field
+                if (!item) {
+                    let s = new Zotero.Search();
+                    s.libraryID = Zotero.Libraries.userLibraryID;
+                    s.addCondition('itemType', 'isNot', 'attachment');
+                    s.addCondition('itemType', 'isNot', 'note');
+                    s.addCondition('itemType', 'isNot', 'annotation');
+                    
+                    let ids = await s.search();
+                    let items = await Zotero.Items.getAsync(ids);
+                    
+                    for (let it of items) {
+                        let extra = it.getField('extra') || '';
+                        if (extra.includes('Citation Key: ' + citekey) || 
+                            extra.toLowerCase().includes('citekey: ' + citekey.toLowerCase())) {
+                            item = it;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!item) {
+                    sendResponseCallback(404, "application/json", JSON.stringify({
+                        error: "Item not found for citekey",
+                        citekey: citekey
+                    }));
+                    return;
+                }
+                
+                // Build response with item data
+                let itemData = {
+                    id: item.id,
+                    key: item.key,
+                    itemType: item.itemType,
+                    title: item.getField('title'),
+                    creators: item.getCreatorsJSON(),
+                    date: item.getField('date'),
+                    extra: item.getField('extra'),
+                    citekey: citekey
+                };
+                
+                // Get PDF attachments
+                let attachmentIDs = item.getAttachments();
+                itemData.attachments = [];
+                for (let attID of attachmentIDs) {
+                    let att = await Zotero.Items.getAsync(attID);
+                    if (att.attachmentContentType === 'application/pdf') {
+                        itemData.attachments.push({
+                            id: att.id,
+                            key: att.key,
+                            title: att.getField('title'),
+                            contentType: att.attachmentContentType,
+                            path: att.getFilePath()
+                        });
+                    }
+                }
+                
+                sendResponseCallback(200, "application/json", JSON.stringify(itemData));
+                
+            } catch (e) {
+                log("Error looking up citekey: " + e);
+                sendResponseCallback(500, "application/json", JSON.stringify({
+                    error: "Internal error",
+                    message: e.message
+                }));
+            }
+        }
+    });
+    
     log("Registered " + Object.keys(MCP_Zotero.endpoints).length + " MCP endpoints");
 }
 

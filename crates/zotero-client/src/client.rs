@@ -347,32 +347,37 @@ impl ZoteroClient {
 
     /// Find an item by its BetterBibTeX citation key.
     ///
-    /// BetterBibTeX stores citation keys in the 'extra' field with format:
-    /// `Citation Key: <key>` or `citekey: <key>`
+    /// Uses the dedicated /mcp/citekey endpoint which queries BetterBibTeX's
+    /// internal database directly for accurate citation key lookup.
     ///
     /// # Arguments
     ///
     /// * `citation_key` - The citation key to search for
-    /// * `search_limit` - Maximum number of items to search through
+    /// * `_search_limit` - Deprecated, kept for API compatibility
     pub async fn find_by_citation_key(
         &self,
         citation_key: &str,
-        search_limit: u32,
+        _search_limit: u32,
     ) -> Result<Option<ZoteroItem>> {
-        let items = self.list_items(search_limit).await?;
+        let url = format!("{}/citekey", self.base_url);
+        let body = serde_json::json!({
+            "citekey": citation_key
+        });
 
-        for item in items {
-            if let Some(extra) = &item.extra {
-                if extra.contains(&format!("Citation Key: {}", citation_key))
-                    || extra
-                        .to_lowercase()
-                        .contains(&format!("citekey: {}", citation_key.to_lowercase()))
-                {
-                    return Ok(Some(item));
-                }
-            }
+        let response = self.client.post(&url).json(&body).send().await?;
+
+        if response.status() == reqwest::StatusCode::NOT_FOUND {
+            return Ok(None);
         }
 
-        Ok(None)
+        if !response.status().is_success() {
+            return Err(ZoteroClientError::Api {
+                status: response.status().as_u16(),
+                message: response.text().await.unwrap_or_default(),
+            });
+        }
+
+        let item: ZoteroItem = response.json().await?;
+        Ok(Some(item))
     }
 }
