@@ -8,7 +8,8 @@ A toolchain for AI-assisted critical reading of academic papers in Zotero. This 
 zotero-mcp/
 ├── crates/
 │   ├── zotero-client/      # Rust client library for Zotero API
-│   └── zotero-mcp-server/  # MCP server exposing Zotero tools
+│   ├── zotero-mcp/         # MCP server library
+│   └── zotero-mcp-cli/     # CLI binary (zotero-mcp)
 ├── zotero-mcp-plugin/      # Zotero 7 plugin for HTTP API
 └── .opencode/commands/     # Slash commands for AI workflows
 ```
@@ -31,7 +32,11 @@ Install [BetterBibTeX](https://retorque.re/zotero-better-bibtex/) for citation k
 ### 3. Build the MCP Server
 
 ```bash
-cargo build --release --package zotero-mcp-server
+# Using nix (recommended)
+nix build
+
+# Or with cargo
+cargo build --release --package zotero-mcp-cli
 ```
 
 ### 4. Configure Your MCP Client
@@ -42,7 +47,7 @@ Add to your MCP configuration (e.g., `~/.config/opencode/mcp.json`):
 {
   "mcpServers": {
     "zotero": {
-      "command": "/path/to/zotero-mcp-server",
+      "command": "zotero-mcp",
       "env": {
         "ZOTERO_URL": "http://localhost:23119/mcp"
       }
@@ -122,9 +127,9 @@ Rust client for the Zotero MCP plugin HTTP API:
 - Text extraction with MuPDF
 - Annotation creation (highlight, area)
 
-### zotero-mcp-server (Binary)
+### zotero-mcp (Library) + zotero-mcp-cli (Binary)
 
-MCP server implementing the critical reading tools. Uses stdio transport for MCP protocol communication.
+MCP server implementing the critical reading tools. The `zotero-mcp` crate is the library, and `zotero-mcp-cli` provides the `zotero-mcp` binary. Uses stdio transport for MCP protocol communication.
 
 ### zotero-mcp-plugin (Zotero Extension)
 
@@ -161,7 +166,7 @@ cargo clippy --workspace --all-targets
 ### Running the MCP Server Locally
 
 ```bash
-RUST_LOG=info cargo run --package zotero-mcp-server
+RUST_LOG=info cargo run --package zotero-mcp-cli
 ```
 
 ## License

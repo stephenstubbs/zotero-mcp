@@ -1,34 +1,10 @@
-//! Zotero MCP Server
+//! Zotero MCP CLI
 //!
-//! An MCP (Model Context Protocol) server that exposes Zotero operations as tools
-//! for AI assistants. Enables critical reading workflows with PDF text extraction
-//! and annotation creation.
-//!
-//! ## Usage
-//!
-//! ```bash
-//! # Run with default Zotero URL (http://localhost:23119/mcp)
-//! zotero-mcp-server
-//!
-//! # Run with custom Zotero URL
-//! ZOTERO_URL=http://192.168.1.100:23119/mcp zotero-mcp-server
-//! ```
-//!
-//! ## Available Tools
-//!
-//! - `zotero_lookup` - Find a Zotero item by BetterBibTeX citation key
-//! - `zotero_read_pdf_pages` - Extract text from PDF pages
-//! - `zotero_create_highlight` - Create a text highlight annotation
-//! - `zotero_create_area_annotation` - Create an area/image annotation
-
-mod server;
-mod tools;
+//! Command-line interface for the Zotero MCP server.
 
 use anyhow::Result;
-use rmcp::{transport::io::stdio, ServiceExt};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
-
-use server::ZoteroMcpServer;
+use zotero_mcp::{stdio, ServiceExt, ZoteroMcpServer};
 
 #[tokio::main]
 async fn main() -> Result<()> {

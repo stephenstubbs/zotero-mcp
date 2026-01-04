@@ -1,6 +1,6 @@
-# Zotero MCP Server
+# Zotero MCP
 
-An MCP (Model Context Protocol) server that exposes Zotero operations as tools for AI assistants. Enables critical reading workflows with PDF text extraction and annotation creation.
+An MCP (Model Context Protocol) server library that exposes Zotero operations as tools for AI assistants. Enables critical reading workflows with PDF text extraction and annotation creation.
 
 ## Features
 
@@ -18,13 +18,17 @@ An MCP (Model Context Protocol) server that exposes Zotero operations as tools f
 ## Installation
 
 ```bash
-cargo install --path crates/zotero-mcp-server
+# Using nix
+nix build
+
+# Or with cargo
+cargo install --path crates/zotero-mcp-cli
 ```
 
 Or build from source:
 
 ```bash
-cargo build --release --package zotero-mcp-server
+cargo build --release --package zotero-mcp-cli
 ```
 
 ## Usage
@@ -33,10 +37,10 @@ cargo build --release --package zotero-mcp-server
 
 ```bash
 # Run with default Zotero URL (http://localhost:23119/mcp)
-zotero-mcp-server
+zotero-mcp
 
 # Run with custom Zotero URL
-ZOTERO_URL=http://192.168.1.100:23119/mcp zotero-mcp-server
+ZOTERO_URL=http://192.168.1.100:23119/mcp zotero-mcp
 ```
 
 ### MCP Configuration
@@ -47,7 +51,7 @@ Add to your MCP client configuration (e.g., `~/.config/opencode/mcp.json`):
 {
   "mcpServers": {
     "zotero": {
-      "command": "zotero-mcp-server",
+      "command": "zotero-mcp",
       "env": {
         "ZOTERO_URL": "http://localhost:23119/mcp"
       }

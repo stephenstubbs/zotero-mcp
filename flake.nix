@@ -107,7 +107,7 @@
               echo "Commands:"
               echo "  cargo build          - Build the project"
               echo "  cargo test           - Run unit tests"
-              echo "  cargo run -p zotero-mcp-server - Run the MCP server"
+              echo "  cargo run -p zotero-mcp-cli - Run the MCP server"
               echo "  nix build            - Build release package"
               echo ""
             '';
@@ -119,7 +119,7 @@
         { pkgs }:
         {
           default = pkgs.rustPlatform.buildRustPackage {
-            pname = "zotero-mcp-server";
+            pname = "zotero-mcp";
             version = "0.1.0";
             src = ./.;
             cargoLock.lockFile = ./Cargo.lock;
@@ -160,10 +160,10 @@
               LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
             };
 
-            # Only build the MCP server binary
+            # Only build the CLI binary
             cargoBuildFlags = [
               "-p"
-              "zotero-mcp-server"
+              "zotero-mcp-cli"
             ];
 
             # Skip integration tests during nix build (they require Zotero running)
@@ -177,7 +177,7 @@
               homepage = "https://github.com/stephenstubbs/zotero-mcp";
               license = licenses.mit;
               maintainers = [ ];
-              mainProgram = "zotero-mcp-server";
+              mainProgram = "zotero-mcp";
             };
           };
         }

@@ -1,16 +1,15 @@
 [package]
-name = "zotero-mcp-server"
+name = "zotero-mcp"
 version = "0.1.0"
 edition = "2021"
-description = "MCP server for Zotero integration - enables AI assistants to read PDFs and create annotations"
+description = "MCP server library for Zotero integration - enables AI assistants to read PDFs and create annotations"
 license = "MIT"
 repository = "https://github.com/yourusername/zotero-mcp"
 keywords = ["zotero", "mcp", "server", "ai", "annotations"]
-categories = ["command-line-utilities"]
+categories = ["api-bindings"]
 
-[[bin]]
-name = "zotero-mcp-server"
-path = "src/main.rs"
+[lib]
+path = "src/lib.rs"
 
 [dependencies]
 # MCP protocol implementation
@@ -25,7 +24,6 @@ tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "sync", "io-
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-# Use rmcp's re-exported schemars to avoid version conflicts
 
 # Error handling
 thiserror = "2.0"
@@ -33,7 +31,6 @@ anyhow = "1.0"
 
 # Logging
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "test-util"] }

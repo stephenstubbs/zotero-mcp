@@ -2380,7 +2380,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "zotero-mcp-server"
+name = "zotero-mcp"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -2390,6 +2390,16 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
- "tracing-subscriber",
  "zotero-client",
+]
+
+[[package]]
+name = "zotero-mcp-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "zotero-mcp",
 ]

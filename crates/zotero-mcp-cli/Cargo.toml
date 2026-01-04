@@ -1,0 +1,28 @@
+[package]
+name = "zotero-mcp-cli"
+version = "0.1.0"
+edition = "2021"
+description = "CLI for Zotero MCP server"
+license = "MIT"
+
+[[bin]]
+name = "zotero-mcp"
+path = "src/main.rs"
+
+[dependencies]
+# Library crate
+zotero-mcp = { path = "../zotero-mcp" }
+
+# Async runtime
+tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
+
+# Error handling
+anyhow = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[features]
+default = []
+integration = []
