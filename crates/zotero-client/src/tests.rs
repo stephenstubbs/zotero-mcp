@@ -1,8 +1,9 @@
 //! Unit tests for the zotero-client library.
 
 use crate::types::{
-    AnnotationPosition, CreateAnnotationRequest, Creator, PingResponse, SearchResponse, Tag,
-    ZoteroAnnotation, ZoteroAttachment, ZoteroItem,
+    AnnotationPosition, CreateAnnotationRequest, CreateAreaAnnotationRequest, Creator,
+    HighlightColor, PingResponse, SearchResponse, Tag, ZoteroAnnotation, ZoteroAttachment,
+    ZoteroItem,
 };
 
 #[test]
@@ -227,4 +228,113 @@ fn test_create_annotation_request_serialization() {
     assert!(json.contains("\"annotationType\":\"highlight\""));
     assert!(json.contains("\"text\":\"Highlighted text\""));
     assert!(json.contains("\"pageLabel\":\"3\"")); // page_index 2 + 1
+}
+
+// ============================================
+// HighlightColor Tests
+// ============================================
+
+#[test]
+fn test_highlight_color_to_hex() {
+    assert_eq!(HighlightColor::Section1.to_hex(), "#2ea8e5");
+    assert_eq!(HighlightColor::Section2.to_hex(), "#a28ae5");
+    assert_eq!(HighlightColor::Section3.to_hex(), "#e56eee");
+    assert_eq!(HighlightColor::Positive.to_hex(), "#5fb236");
+    assert_eq!(HighlightColor::Detail.to_hex(), "#aaaaaa");
+    assert_eq!(HighlightColor::Negative.to_hex(), "#ff6666");
+    assert_eq!(HighlightColor::Code.to_hex(), "#f19837");
+}
+
+#[test]
+fn test_highlight_color_display() {
+    let color = HighlightColor::Positive;
+    assert_eq!(format!("{}", color), "#5fb236");
+}
+
+#[test]
+fn test_highlight_color_into_string() {
+    let color = HighlightColor::Section1;
+    let s: String = color.into();
+    assert_eq!(s, "#2ea8e5");
+}
+
+#[test]
+fn test_highlight_color_description() {
+    assert!(HighlightColor::Positive.description().contains("Positive"));
+    assert!(HighlightColor::Code.description().contains("Code"));
+}
+
+#[test]
+fn test_highlight_color_serialization() {
+    let color = HighlightColor::Section1;
+    let json = serde_json::to_string(&color).unwrap();
+    assert_eq!(json, "\"section1\"");
+}
+
+#[test]
+fn test_highlight_color_deserialization() {
+    let color: HighlightColor = serde_json::from_str("\"positive\"").unwrap();
+    assert_eq!(color, HighlightColor::Positive);
+
+    let color: HighlightColor = serde_json::from_str("\"code\"").unwrap();
+    assert_eq!(color, HighlightColor::Code);
+}
+
+// ============================================
+// CreateAreaAnnotationRequest Tests
+// ============================================
+
+#[test]
+fn test_create_area_annotation_request_new() {
+    let request = CreateAreaAnnotationRequest::new("PDF_KEY", 0, [100.0, 200.0, 300.0, 400.0]);
+
+    assert_eq!(request.parent_item_key, "PDF_KEY");
+    assert_eq!(request.annotation_type, "image");
+    assert_eq!(request.color, Some("#ffd400".to_string())); // Default yellow
+    assert_eq!(request.page_label, Some("1".to_string())); // page_index 0 + 1
+    assert_eq!(request.comment, None);
+
+    assert_eq!(request.position.page_index, 0);
+    assert_eq!(request.position.rects.len(), 1);
+    assert_eq!(request.position.rects[0], vec![100.0, 200.0, 300.0, 400.0]);
+}
+
+#[test]
+fn test_create_area_annotation_request_with_options() {
+    let request = CreateAreaAnnotationRequest::new("PDF_KEY", 5, [0.0, 0.0, 100.0, 100.0])
+        .with_comment("Figure 1")
+        .with_color("#ff0000");
+
+    assert_eq!(request.comment, Some("Figure 1".to_string()));
+    assert_eq!(request.color, Some("#ff0000".to_string()));
+    assert_eq!(request.page_label, Some("6".to_string())); // page_index 5 + 1
+}
+
+#[test]
+fn test_create_area_annotation_request_with_semantic_color() {
+    let request = CreateAreaAnnotationRequest::new("PDF_KEY", 0, [0.0, 0.0, 100.0, 100.0])
+        .with_semantic_color(HighlightColor::Section1);
+
+    assert_eq!(request.color, Some("#2ea8e5".to_string()));
+}
+
+#[test]
+fn test_create_area_annotation_request_serialization() {
+    let request = CreateAreaAnnotationRequest::new("PDF123", 2, [10.0, 20.0, 30.0, 40.0]);
+
+    let json = serde_json::to_string(&request).unwrap();
+
+    assert!(json.contains("\"parentItemKey\":\"PDF123\""));
+    assert!(json.contains("\"annotationType\":\"image\""));
+    assert!(json.contains("\"pageLabel\":\"3\"")); // page_index 2 + 1
+                                                   // Verify no "text" field (area annotations don't have text)
+    assert!(!json.contains("\"text\""));
+}
+
+#[test]
+fn test_create_annotation_request_with_semantic_color() {
+    let request = CreateAnnotationRequest::highlight("PDF_KEY", "Test", 0, vec![])
+        .with_semantic_color(HighlightColor::Positive);
+
+    assert_eq!(request.color, Some("#5fb236".to_string()));
 }

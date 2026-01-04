@@ -43,7 +43,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n[2] Looking up item with citation key: {}", CITATION_KEY);
     let item = match client.find_by_citation_key(CITATION_KEY, 500).await? {
         Some(item) => {
-            println!("OK: Found item: {}", item.title.as_deref().unwrap_or("No title"));
+            println!(
+                "OK: Found item: {}",
+                item.title.as_deref().unwrap_or("No title")
+            );
             println!("    Key: {}", item.key);
             println!("    Type: {}", item.item_type);
             item
@@ -55,7 +58,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let items = client.search_items("Practical Data Mesh", 10).await?;
             match items.into_iter().next() {
                 Some(item) => {
-                    println!("OK: Found item: {}", item.title.as_deref().unwrap_or("No title"));
+                    println!(
+                        "OK: Found item: {}",
+                        item.title.as_deref().unwrap_or("No title")
+                    );
                     println!("    Key: {}", item.key);
                     item
                 }
@@ -90,8 +96,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Checking all children:");
             let children = client.get_children(&item.key).await?;
             for child in &children.children {
-                let item_type = child.get("itemType").and_then(|v| v.as_str()).unwrap_or("unknown");
-                let title = child.get("title").and_then(|v| v.as_str()).unwrap_or("No title");
+                let item_type = child
+                    .get("itemType")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown");
+                let title = child
+                    .get("title")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("No title");
                 println!("  - {}: {}", item_type, title);
             }
             return Err("No PDF attachment found".into());
@@ -130,8 +142,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         } else {
                             println!("OK: Found {} rect(s) for highlight.", rects.len());
                             for (i, rect) in rects.iter().enumerate() {
-                                println!("  Rect {}: [{:.1}, {:.1}, {:.1}, {:.1}]", 
-                                    i + 1, rect[0], rect[1], rect[2], rect[3]);
+                                println!(
+                                    "  Rect {}: [{:.1}, {:.1}, {:.1}, {:.1}]",
+                                    i + 1,
+                                    rect[0],
+                                    rect[1],
+                                    rect[2],
+                                    rect[3]
+                                );
                                 highlight_rects.push(rect.to_vec());
                             }
                         }
@@ -164,7 +182,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if result.success {
         println!("OK: Created highlight!");
         if let Some(ann) = &result.annotation {
-            println!("    Annotation Key: {}", ann.key.as_deref().unwrap_or("unknown"));
+            println!(
+                "    Annotation Key: {}",
+                ann.key.as_deref().unwrap_or("unknown")
+            );
             println!("    Text: {}", ann.text.as_deref().unwrap_or(""));
             println!("    Page: {}", ann.page_label.as_deref().unwrap_or(""));
         }

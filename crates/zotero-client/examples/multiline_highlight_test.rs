@@ -41,13 +41,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             items.into_iter().next().ok_or("Item not found")?
         }
     };
-    println!("OK: Found item: {}", item.title.as_deref().unwrap_or("No title"));
+    println!(
+        "OK: Found item: {}",
+        item.title.as_deref().unwrap_or("No title")
+    );
 
     // Step 3: Get PDF attachment
     println!("\n[3] Looking for PDF attachments...");
     let pdfs = client.get_pdf_attachments(&item.key).await?;
     let pdf = pdfs.into_iter().next().ok_or("No PDF attachment found")?;
-    println!("OK: Found PDF: {}", pdf.path.as_deref().unwrap_or("No path"));
+    println!(
+        "OK: Found PDF: {}",
+        pdf.path.as_deref().unwrap_or("No path")
+    );
 
     // Step 4: Search for text using MuPDF's native search (like PyMuPDF)
     #[cfg(feature = "pdf")]
@@ -56,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("\n[4] Searching for text using MuPDF native search (like PyMuPDF)...");
             println!("    Page: {}", HIGHLIGHT_PAGE + 1);
             println!("    Search text length: {} chars", HIGHLIGHT_TEXT.len());
-            
+
             // Use MuPDF's native search which handles multi-line text properly
             // This matches PyMuPDF's page.search_for() behavior exactly
             match zotero_client::pdf::search_for_rects(pdf_path, HIGHLIGHT_PAGE, HIGHLIGHT_TEXT) {
@@ -64,7 +70,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if rects.is_empty() {
                         println!("Text not found on page {}", HIGHLIGHT_PAGE + 1);
                         println!("\n[5] Trying to extract page text for debugging...");
-                        if let Ok(text) = zotero_client::pdf::extract_text(pdf_path, HIGHLIGHT_PAGE) {
+                        if let Ok(text) = zotero_client::pdf::extract_text(pdf_path, HIGHLIGHT_PAGE)
+                        {
                             println!("First 500 chars of page:");
                             println!("{}", text.chars().take(500).collect::<String>());
                         }
@@ -72,8 +79,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     } else {
                         println!("OK: Found {} rect(s) for multi-line highlight", rects.len());
                         for (i, rect) in rects.iter().enumerate() {
-                            println!("  Rect {}: [{:.1}, {:.1}, {:.1}, {:.1}]", 
-                                i + 1, rect[0], rect[1], rect[2], rect[3]);
+                            println!(
+                                "  Rect {}: [{:.1}, {:.1}, {:.1}, {:.1}]",
+                                i + 1,
+                                rect[0],
+                                rect[1],
+                                rect[2],
+                                rect[3]
+                            );
                         }
                         rects.into_iter().map(|r| r.to_vec()).collect()
                     }
@@ -96,7 +109,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Step 6: Create the highlight
     println!("\n[6] Creating multi-line highlight...");
-    
+
     let request = CreateAnnotationRequest::highlight(
         &pdf.key,
         HIGHLIGHT_TEXT,
@@ -113,7 +126,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if result.success {
         println!("OK: Created highlight!");
         if let Some(ann) = &result.annotation {
-            println!("    Annotation Key: {}", ann.key.as_deref().unwrap_or("unknown"));
+            println!(
+                "    Annotation Key: {}",
+                ann.key.as_deref().unwrap_or("unknown")
+            );
             println!("    Page: {}", ann.page_label.as_deref().unwrap_or(""));
         }
     } else {

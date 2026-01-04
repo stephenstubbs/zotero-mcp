@@ -47,7 +47,11 @@ async fn test_search_items() {
         Ok(items) => {
             println!("Found {} items matching 'test'", items.len());
             for item in &items {
-                println!("  - {} [{}]", item.title.as_deref().unwrap_or("No title"), item.key);
+                println!(
+                    "  - {} [{}]",
+                    item.title.as_deref().unwrap_or("No title"),
+                    item.key
+                );
             }
         }
         Err(e) => {
@@ -108,7 +112,11 @@ async fn test_get_item() {
 
             match item {
                 Ok(item) => {
-                    println!("Got item: {} [{}]", item.title.as_deref().unwrap_or("No title"), item.key);
+                    println!(
+                        "Got item: {} [{}]",
+                        item.title.as_deref().unwrap_or("No title"),
+                        item.key
+                    );
                 }
                 Err(e) => {
                     println!("Get item failed: {}", e);

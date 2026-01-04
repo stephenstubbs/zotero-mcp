@@ -1,6 +1,74 @@
 //! Data types for the Zotero client library.
 
 use serde::{Deserialize, Serialize};
+use std::fmt;
+
+/// Semantic highlight colors for annotations.
+///
+/// These colors follow a predefined scheme for consistent meaning:
+/// - Section colors (Blue, Purple, Magenta) for organizational structure
+/// - Assessment colors (Green = positive, Red = negative, Grey = detail)
+/// - Special colors (Orange = code)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum HighlightColor {
+    /// Blue (#2ea8e5) - Section 1 / Primary organization
+    Section1,
+    /// Purple (#a28ae5) - Section 2 / Secondary organization
+    Section2,
+    /// Magenta (#e56eee) - Section 3 / Tertiary organization
+    Section3,
+    /// Green (#5fb236) - Positive point / Agreement / Support
+    Positive,
+    /// Grey (#aaaaaa) - Point detail / Neutral / Context
+    Detail,
+    /// Red (#ff6666) - Negative point / Disagreement / Criticism
+    Negative,
+    /// Orange (#f19837) - Code / Technical content
+    Code,
+}
+
+impl HighlightColor {
+    /// Get the hex color code for this semantic color.
+    #[must_use]
+    pub fn to_hex(&self) -> &'static str {
+        match self {
+            Self::Section1 => "#2ea8e5",
+            Self::Section2 => "#a28ae5",
+            Self::Section3 => "#e56eee",
+            Self::Positive => "#5fb236",
+            Self::Detail => "#aaaaaa",
+            Self::Negative => "#ff6666",
+            Self::Code => "#f19837",
+        }
+    }
+
+    /// Get a human-readable description of this color's semantic meaning.
+    #[must_use]
+    pub fn description(&self) -> &'static str {
+        match self {
+            Self::Section1 => "Section 1 / Primary organization",
+            Self::Section2 => "Section 2 / Secondary organization",
+            Self::Section3 => "Section 3 / Tertiary organization",
+            Self::Positive => "Positive point / Agreement",
+            Self::Detail => "Point detail / Context",
+            Self::Negative => "Negative point / Criticism",
+            Self::Code => "Code / Technical content",
+        }
+    }
+}
+
+impl fmt::Display for HighlightColor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_hex())
+    }
+}
+
+impl From<HighlightColor> for String {
+    fn from(color: HighlightColor) -> Self {
+        color.to_hex().to_string()
+    }
+}
 
 /// A creator (author, editor, etc.) of a Zotero item.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -185,6 +253,93 @@ impl CreateAnnotationRequest {
     /// Set the color of this annotation.
     pub fn with_color(mut self, color: impl Into<String>) -> Self {
         self.color = Some(color.into());
+        self
+    }
+
+    /// Set the color using a semantic `HighlightColor`.
+    pub fn with_semantic_color(mut self, color: HighlightColor) -> Self {
+        self.color = Some(color.to_hex().to_string());
+        self
+    }
+}
+
+/// Request to create an area/image annotation (for figures, diagrams, etc.).
+///
+/// Area annotations use `annotationType: "image"` and only require position
+/// coordinates (no text content).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateAreaAnnotationRequest {
+    /// Key of the parent PDF attachment.
+    pub parent_item_key: String,
+    /// Type of annotation (always "image" for area annotations).
+    pub annotation_type: String,
+    /// User comment.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    /// Highlight color (hex code).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    /// Page label (human-readable page number).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page_label: Option<String>,
+    /// Sort index for ordering annotations.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sort_index: Option<String>,
+    /// Position information (page index and rectangular region).
+    pub position: AnnotationPosition,
+}
+
+impl CreateAreaAnnotationRequest {
+    /// Create a new area annotation request.
+    ///
+    /// # Arguments
+    ///
+    /// * `parent_item_key` - The key of the parent PDF attachment
+    /// * `page_index` - Zero-based page index
+    /// * `rect` - Bounding rectangle [x1, y1, x2, y2] in PDF coordinates
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use zotero_client::types::CreateAreaAnnotationRequest;
+    ///
+    /// let request = CreateAreaAnnotationRequest::new(
+    ///     "ABCD1234",
+    ///     0, // page index
+    ///     [100.0, 200.0, 300.0, 400.0], // rect
+    /// );
+    /// ```
+    pub fn new(parent_item_key: impl Into<String>, page_index: u32, rect: [f64; 4]) -> Self {
+        Self {
+            parent_item_key: parent_item_key.into(),
+            annotation_type: "image".to_string(),
+            comment: None,
+            color: Some("#ffd400".to_string()), // Default yellow
+            page_label: Some((page_index + 1).to_string()),
+            sort_index: None,
+            position: AnnotationPosition {
+                page_index,
+                rects: vec![rect.to_vec()],
+            },
+        }
+    }
+
+    /// Set the comment on this annotation.
+    pub fn with_comment(mut self, comment: impl Into<String>) -> Self {
+        self.comment = Some(comment.into());
+        self
+    }
+
+    /// Set the color of this annotation (hex code).
+    pub fn with_color(mut self, color: impl Into<String>) -> Self {
+        self.color = Some(color.into());
+        self
+    }
+
+    /// Set the color using a semantic `HighlightColor`.
+    pub fn with_semantic_color(mut self, color: HighlightColor) -> Self {
+        self.color = Some(color.to_hex().to_string());
         self
     }
 }

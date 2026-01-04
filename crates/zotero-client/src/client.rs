@@ -4,8 +4,9 @@ use reqwest::Client;
 
 use crate::error::{Result, ZoteroClientError};
 use crate::types::{
-    ChildrenResponse, CreateAnnotationRequest, CreateAnnotationResponse, ItemsResponse,
-    PingResponse, SearchResponse, ZoteroAttachment, ZoteroItem,
+    ChildrenResponse, CreateAnnotationRequest, CreateAnnotationResponse,
+    CreateAreaAnnotationRequest, ItemsResponse, PingResponse, SearchResponse, ZoteroAttachment,
+    ZoteroItem,
 };
 
 /// Default base URL for the Zotero MCP plugin.
@@ -288,6 +289,62 @@ impl ZoteroClient {
         Ok(response.json().await?)
     }
 
+    /// Create an area/image annotation on a PDF attachment.
+    ///
+    /// Area annotations are used for selecting regions like figures, diagrams,
+    /// or images. They use `annotationType: "image"` and don't require text content.
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - The area annotation creation request
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use zotero_client::{ZoteroClient, types::{CreateAreaAnnotationRequest, HighlightColor}};
+    ///
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let client = ZoteroClient::new();
+    ///
+    /// let request = CreateAreaAnnotationRequest::new(
+    ///     "PDF_KEY",
+    ///     0, // page index
+    ///     [100.0, 200.0, 300.0, 400.0], // rect [x1, y1, x2, y2]
+    /// )
+    /// .with_comment("Figure 1: System architecture")
+    /// .with_semantic_color(HighlightColor::Section1);
+    ///
+    /// let result = client.create_area_annotation(request).await?;
+    /// if result.success {
+    ///     println!("Created area annotation: {:?}", result.annotation);
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn create_area_annotation(
+        &self,
+        request: CreateAreaAnnotationRequest,
+    ) -> Result<CreateAnnotationResponse> {
+        let url = format!("{}/annotations", self.base_url);
+
+        let response = self.client.post(&url).json(&request).send().await?;
+
+        if response.status().as_u16() == 404 {
+            return Err(ZoteroClientError::NotFound {
+                key: request.parent_item_key,
+            });
+        }
+
+        if !response.status().is_success() {
+            return Err(ZoteroClientError::Api {
+                status: response.status().as_u16(),
+                message: response.text().await.unwrap_or_default(),
+            });
+        }
+
+        Ok(response.json().await?)
+    }
+
     /// Find an item by its BetterBibTeX citation key.
     ///
     /// BetterBibTeX stores citation keys in the 'extra' field with format:
@@ -307,7 +364,9 @@ impl ZoteroClient {
         for item in items {
             if let Some(extra) = &item.extra {
                 if extra.contains(&format!("Citation Key: {}", citation_key))
-                    || extra.to_lowercase().contains(&format!("citekey: {}", citation_key.to_lowercase()))
+                    || extra
+                        .to_lowercase()
+                        .contains(&format!("citekey: {}", citation_key.to_lowercase()))
                 {
                     return Ok(Some(item));
                 }
