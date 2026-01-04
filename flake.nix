@@ -1,5 +1,5 @@
 {
-  description = "Multi-language development environment (rust, node)";
+  description = "zotero-mcp: MCP server for Zotero integration with AI assistants";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -38,7 +38,7 @@
         );
     in
     {
-      overlays.default = final: prev: rec {
+      overlays.default = final: prev: {
         rustToolchain =
           let
             rust = prev.rust-bin;
@@ -49,12 +49,11 @@
             rust.fromRustupToolchainFile ./rust-toolchain
           else
             rust.stable.latest.default.override {
-              extensions = [ "rust-src" ];
+              extensions = [
+                "rust-src"
+                "rust-analyzer"
+              ];
             };
-        nodejs = prev.nodejs;
-        yarn = prev.yarn.override {
-          inherit nodejs;
-        };
       };
 
       devShells = forEachSupportedSystem (
@@ -62,14 +61,18 @@
         {
           default = pkgs.mkShell {
             packages = with pkgs; [
+              # Rust toolchain
+              rustToolchain
               cargo-edit
               cargo-workspaces
-              node2nix
-              nodejs
+
+              # Build dependencies
               pkg-config
-              rust-analyzer
-              rustToolchain
+
+              # Node.js for Zotero plugin
+              nodejs
               yarn
+
               # MuPDF build dependencies (for mupdf-rs crate)
               mupdf
               freetype
@@ -88,11 +91,93 @@
               gnumake
             ];
 
-            # Required for mupdf-sys to find the libraries
             env = {
+              # Required by rust-analyzer
+              RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
+              # Required for mupdf-sys to find the libraries
               MUPDF_LIB_DIR = "${pkgs.mupdf}/lib";
               MUPDF_INCLUDE_DIR = "${pkgs.mupdf}/include";
               LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+            };
+
+            shellHook = ''
+              echo "zotero-mcp development environment"
+              echo "Rust: $(rustc --version)"
+              echo ""
+              echo "Commands:"
+              echo "  cargo build          - Build the project"
+              echo "  cargo test           - Run unit tests"
+              echo "  cargo run -p zotero-mcp-server - Run the MCP server"
+              echo "  nix build            - Build release package"
+              echo ""
+            '';
+          };
+        }
+      );
+
+      packages = forEachSupportedSystem (
+        { pkgs }:
+        {
+          default = pkgs.rustPlatform.buildRustPackage {
+            pname = "zotero-mcp-server";
+            version = "0.1.0";
+            src = ./.;
+            cargoLock.lockFile = ./Cargo.lock;
+
+            nativeBuildInputs = with pkgs; [
+              pkg-config
+              clang
+              llvmPackages.libclang
+              gperf
+              gnumake
+            ];
+
+            buildInputs =
+              with pkgs;
+              [
+                # MuPDF and its dependencies
+                mupdf
+                freetype
+                harfbuzz
+                libjpeg
+                jbig2dec
+                openjpeg
+                gumbo
+                mujs
+                zlib
+                openssl
+                fontconfig
+              ]
+              ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
+                darwin.apple_sdk.frameworks.Security
+                darwin.apple_sdk.frameworks.SystemConfiguration
+              ];
+
+            env = {
+              # Required for mupdf-sys to find the libraries
+              MUPDF_LIB_DIR = "${pkgs.mupdf}/lib";
+              MUPDF_INCLUDE_DIR = "${pkgs.mupdf}/include";
+              LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+            };
+
+            # Only build the MCP server binary
+            cargoBuildFlags = [
+              "-p"
+              "zotero-mcp-server"
+            ];
+
+            # Skip integration tests during nix build (they require Zotero running)
+            checkFlags = [
+              "--skip"
+              "integration"
+            ];
+
+            meta = with pkgs.lib; {
+              description = "MCP server for Zotero integration - enables AI assistants to read PDFs and create annotations";
+              homepage = "https://github.com/stephenstubbs/zotero-mcp";
+              license = licenses.mit;
+              maintainers = [ ];
+              mainProgram = "zotero-mcp-server";
             };
           };
         }
