@@ -66,6 +66,12 @@ The system SHALL map hex colors to semantic names.
   - `#aaaaaa` → detail
   - `#ff6666` → negative
   - `#f19837` → code
+  - `#ffd400` → question
+
+#### Scenario: Parse yellow question annotations
+- **WHEN** parsing a highlight with `<mark style="background-color: #ffd400">`
+- **THEN** it maps to semantic color `question`
+- **AND** the annotation is categorized as questions/uncertainties
 
 ### Requirement: Note Writing
 The system SHALL create markdown notes in the Obsidian vault.

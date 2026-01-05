@@ -27,6 +27,11 @@ Highlighted text content here
 **Positive point comment**
 The key finding was significant
 [@smithML2023 p. 12]
+
+<mark style="background-color: #ffd400">Highlight</mark>
+**Question: What about edge cases?**
+The authors do not address boundary conditions
+[@smithML2023 p. 18]
 ```
 
 Phase 4 builds ON TOP of this workflow rather than replacing it.
@@ -42,6 +47,7 @@ Phase 4 builds ON TOP of this workflow rather than replacing it.
 | Grey | `#aaaaaa` | Detail (bold comment) |
 | Red | `#ff6666` | Negative point (bold comment) |
 | Orange | `#f19837` | Code block with comment as language |
+| Yellow | `#ffd400` | Question / Uncertainty (bold comment) |
 
 ## Goals / Non-Goals
 

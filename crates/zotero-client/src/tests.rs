@@ -243,6 +243,7 @@ fn test_highlight_color_to_hex() {
     assert_eq!(HighlightColor::Detail.to_hex(), "#aaaaaa");
     assert_eq!(HighlightColor::Negative.to_hex(), "#ff6666");
     assert_eq!(HighlightColor::Code.to_hex(), "#f19837");
+    assert_eq!(HighlightColor::Question.to_hex(), "#ffd400");
 }
 
 #[test]
@@ -262,6 +263,7 @@ fn test_highlight_color_into_string() {
 fn test_highlight_color_description() {
     assert!(HighlightColor::Positive.description().contains("Positive"));
     assert!(HighlightColor::Code.description().contains("Code"));
+    assert!(HighlightColor::Question.description().contains("Question"));
 }
 
 #[test]
@@ -269,6 +271,10 @@ fn test_highlight_color_serialization() {
     let color = HighlightColor::Section1;
     let json = serde_json::to_string(&color).unwrap();
     assert_eq!(json, "\"section1\"");
+
+    let color = HighlightColor::Question;
+    let json = serde_json::to_string(&color).unwrap();
+    assert_eq!(json, "\"question\"");
 }
 
 #[test]
@@ -278,6 +284,9 @@ fn test_highlight_color_deserialization() {
 
     let color: HighlightColor = serde_json::from_str("\"code\"").unwrap();
     assert_eq!(color, HighlightColor::Code);
+
+    let color: HighlightColor = serde_json::from_str("\"question\"").unwrap();
+    assert_eq!(color, HighlightColor::Question);
 }
 
 // ============================================
@@ -337,4 +346,20 @@ fn test_create_annotation_request_with_semantic_color() {
         .with_semantic_color(HighlightColor::Positive);
 
     assert_eq!(request.color, Some("#5fb236".to_string()));
+}
+
+#[test]
+fn test_create_annotation_request_with_question_color() {
+    let request = CreateAnnotationRequest::highlight("PDF_KEY", "Test", 0, vec![])
+        .with_semantic_color(HighlightColor::Question);
+
+    assert_eq!(request.color, Some("#ffd400".to_string()));
+}
+
+#[test]
+fn test_create_area_annotation_request_with_question_color() {
+    let request = CreateAreaAnnotationRequest::new("PDF_KEY", 0, [0.0, 0.0, 100.0, 100.0])
+        .with_semantic_color(HighlightColor::Question);
+
+    assert_eq!(request.color, Some("#ffd400".to_string()));
 }

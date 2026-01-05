@@ -28,6 +28,8 @@ pub enum HighlightColorParam {
     Negative,
     /// Orange - Code / Technical content
     Code,
+    /// Yellow - Question / Uncertainty / Needs clarification
+    Question,
 }
 
 impl From<HighlightColorParam> for HighlightColor {
@@ -40,6 +42,7 @@ impl From<HighlightColorParam> for HighlightColor {
             HighlightColorParam::Detail => HighlightColor::Detail,
             HighlightColorParam::Negative => HighlightColor::Negative,
             HighlightColorParam::Code => HighlightColor::Code,
+            HighlightColorParam::Question => HighlightColor::Question,
         }
     }
 }
@@ -457,5 +460,13 @@ mod tests {
         let param = HighlightColorParam::Positive;
         let color: HighlightColor = param.into();
         assert_eq!(color, HighlightColor::Positive);
+    }
+
+    #[test]
+    fn test_highlight_color_param_question_conversion() {
+        let param = HighlightColorParam::Question;
+        let color: HighlightColor = param.into();
+        assert_eq!(color, HighlightColor::Question);
+        assert_eq!(color.to_hex(), "#ffd400");
     }
 }

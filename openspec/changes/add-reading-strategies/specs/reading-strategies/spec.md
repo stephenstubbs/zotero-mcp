@@ -11,7 +11,7 @@ The system SHALL provide a `/read-sq3r` command implementing the SQ3R methodolog
 #### Scenario: Question phase
 - **WHEN** the Survey phase completes
 - **THEN** the AI generates questions from headings
-- **AND** adds questions as Grey-colored annotations
+- **AND** adds questions as Yellow-colored (`question`) annotations
 
 #### Scenario: Read phase
 - **WHEN** the Question phase completes
@@ -85,3 +85,18 @@ The base `/read` command SHALL accept a strategy parameter.
 #### Scenario: Invalid strategy
 - **WHEN** an unknown strategy is specified
 - **THEN** an error lists available strategies
+
+### Requirement: Strategy-Specific Color Documentation
+Each reading strategy command file SHALL document its specific color usage.
+
+#### Scenario: Color scheme section in command file
+- **WHEN** a reading strategy command file is created (e.g., `/read-sq3r.md`)
+- **THEN** it includes a "Color Scheme" section
+- **AND** the section documents which of the 8 colors the strategy uses
+- **AND** the section explains what each color means in that strategy's context
+
+#### Scenario: Color reuse flexibility
+- **WHEN** different strategies use the same color differently
+- **THEN** both usages are valid
+- **AND** each strategy's command file documents its specific interpretation
+- **Example**: `/read-sq3r` uses `section1` for chapter structure, while `/read-analyze` uses it for premises

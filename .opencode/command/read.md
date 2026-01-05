@@ -227,6 +227,9 @@ Use these colors consistently for meaning:
 | `detail` | #aaaaaa (Grey) | Background info / Context / Definitions |
 | `negative` | #ff6666 (Red) | Critique / Weak points / Disagreement |
 | `code` | #f19837 (Orange) | Code snippets / Technical formulas |
+| `question` | #ffd400 (Yellow) | Questions / Uncertainties / Needs clarification |
+
+**Note**: Different reading strategies may interpret colors differently. See strategy-specific command files (e.g., `/read-sq3r`, `/read-review`) for their color mappings.
 
 ## Fallback Behavior: No Outline Available
 

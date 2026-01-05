@@ -8,7 +8,7 @@ use std::fmt;
 /// These colors follow a predefined scheme for consistent meaning:
 /// - Section colors (Blue, Purple, Magenta) for organizational structure
 /// - Assessment colors (Green = positive, Red = negative, Grey = detail)
-/// - Special colors (Orange = code)
+/// - Special colors (Orange = code, Yellow = question)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum HighlightColor {
@@ -26,6 +26,8 @@ pub enum HighlightColor {
     Negative,
     /// Orange (#f19837) - Code / Technical content
     Code,
+    /// Yellow (#ffd400) - Question / Uncertainty / Needs clarification
+    Question,
 }
 
 impl HighlightColor {
@@ -40,6 +42,7 @@ impl HighlightColor {
             Self::Detail => "#aaaaaa",
             Self::Negative => "#ff6666",
             Self::Code => "#f19837",
+            Self::Question => "#ffd400",
         }
     }
 
@@ -54,6 +57,7 @@ impl HighlightColor {
             Self::Detail => "Point detail / Context",
             Self::Negative => "Negative point / Criticism",
             Self::Code => "Code / Technical content",
+            Self::Question => "Question / Uncertainty / Needs clarification",
         }
     }
 }

@@ -43,7 +43,7 @@ Different reading purposes require different approaches. A student studying for 
 2. **Question** (2 min)
    - Convert headings to questions
    - Add questions as annotation comments
-   - Use Grey for question annotations
+   - Use Yellow (`question`) for question annotations
 
 3. **Read** (variable)
    - Read actively, seeking answers to questions
@@ -60,10 +60,11 @@ Different reading purposes require different approaches. A student studying for 
 
 **Color Mapping**:
 - Blue/Purple/Magenta: Structure (Survey phase)
-- Grey: Questions
-- Green: Answers/Key points
-- Red: Confusion/Need review
-- Orange: Examples/Code
+- Yellow (`question`): Questions generated during Question phase
+- Green (`positive`): Answers/Key points found during Read phase
+- Red (`negative`): Confusion/Need review
+- Grey (`detail`): Supporting details and examples
+- Orange (`code`): Technical content/Code
 
 ### Literature Review Strategy (`/read-review`)
 
@@ -116,12 +117,13 @@ Different reading purposes require different approaches. A student studying for 
    - Note implications
 
 **Color Mapping**:
-- Blue: Premises/Claims
-- Purple: Conclusions/Thesis
-- Green: Supporting evidence
-- Red: Weaknesses/Gaps
-- Grey: Assumptions/Definitions
-- Orange: Data/Statistics
+- Blue (`section1`): Premises/Claims
+- Purple (`section2`): Conclusions/Thesis
+- Green (`positive`): Supporting evidence
+- Red (`negative`): Weaknesses/Gaps
+- Grey (`detail`): Assumptions/Definitions
+- Orange (`code`): Data/Statistics
+- Yellow (`question`): Unclear arguments/Questions
 
 ### Skim Strategy (`/read-skim`)
 
