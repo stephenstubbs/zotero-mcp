@@ -11,6 +11,7 @@ categories = ["api-bindings"]
 [features]
 default = []
 pdf = ["mupdf"]
+image = ["pdf", "dep:image", "dep:base64"]
 integration = []
 
 [dependencies]
@@ -31,6 +32,10 @@ mupdf = { version = "0.5", optional = true, features = [
     "sys-lib-openjpeg",
     "sys-lib-zlib",
 ] }
+
+# Optional image processing for rendering PDFs as images
+image = { version = "0.25", optional = true, default-features = false, features = ["png", "jpeg"] }
+base64 = { version = "0.22", optional = true }
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }

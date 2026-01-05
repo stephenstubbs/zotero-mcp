@@ -67,8 +67,25 @@
 //!
 //! ## Features
 //!
-//! - `pdf` - Enable PDF text extraction with position information (uses `pdf_oxide`)
+//! - `pdf` - Enable PDF text extraction with position information (uses MuPDF)
+//! - `image` - Enable PDF image extraction for vision AI workflows (includes `pdf`)
 //! - `integration` - Enable integration tests that require a running Zotero instance
+//!
+//! ## Image Extraction
+//!
+//! Enable the `image` feature to render PDF pages as images:
+//!
+//! ```toml
+//! [dependencies]
+//! zotero-client = { version = "0.1", features = ["image"] }
+//! ```
+//!
+//! ```ignore
+//! use zotero_client::image::{render_page, ImageFormat};
+//!
+//! let image_data = render_page("/path/to/file.pdf", 0, 150, ImageFormat::Png)?;
+//! // image_data is base64-encoded PNG suitable for vision AI
+//! ```
 
 pub mod client;
 pub mod error;
@@ -76,6 +93,9 @@ pub mod types;
 
 #[cfg(feature = "pdf")]
 pub mod pdf;
+
+#[cfg(feature = "image")]
+pub mod image;
 
 #[cfg(test)]
 mod tests;

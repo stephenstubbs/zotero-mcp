@@ -16,7 +16,7 @@ path = "src/lib.rs"
 rmcp = { version = "0.12", features = ["server", "transport-io", "macros"] }
 
 # Zotero client
-zotero-client = { path = "../zotero-client", features = ["pdf"] }
+zotero-client = { path = "../zotero-client", features = ["pdf", "image"] }
 
 # Async runtime
 tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "sync", "io-std"] }

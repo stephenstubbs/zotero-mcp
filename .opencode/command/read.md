@@ -109,17 +109,74 @@ Multiple sections can be comma-separated:
 zotero_read_pdf_pages(attachment_key: "<key>", section: "Introduction,Methods")
 ```
 
-### Step 4: Analyze Content
+### Step 4: Detect and Extract Figures
 
-Apply critical reading techniques based on the purpose:
+**IMPORTANT**: After reading text content, automatically detect figures, charts, and diagrams on each page.
 
-- **Identify key claims and arguments**
-- **Note supporting evidence**
+For each page that was read, call `zotero_list_figures` to find visual content:
+```
+zotero_list_figures(attachment_key: "<key>", page: <page_number>)
+```
+
+This returns a list of detected figures with their locations and types:
+```json
+[
+  {
+    "index": 0,
+    "rect": [72.0, 200.5, 523.0, 680.3],
+    "figure_type": "chart",
+    "confidence": 0.85,
+    "width": 451.0,
+    "height": 479.8
+  }
+]
+```
+
+#### When to Extract Figures
+
+Extract and analyze figures in these situations:
+
+1. **Text references a figure** (e.g., "as shown in Figure 3", "see diagram above")
+2. **High-confidence detections** (confidence ≥ 0.7)
+3. **Large figures** that likely contain important information (width/height > 200 points)
+4. **When reading purpose** suggests visual analysis is important (e.g., "understand the architecture", "analyze results")
+
+#### Extracting Figure Images
+
+When you identify an important figure, extract it as an image:
+```
+zotero_get_figure(
+  attachment_key: "<key>",
+  page: <page_number>,
+  figure_index: <index>,
+  format: "jpeg",
+  include_context: false
+)
+```
+
+This returns a file path to the extracted figure image:
+```json
+{
+  "file_path": "/tmp/zotero-figure-KEY-p5-f0-1234567890.jpg",
+  "mime_type": "image/jpeg"
+}
+```
+
+**Then analyze the image** using your vision capabilities and incorporate insights into your reading notes.
+
+### Step 5: Analyze Content (Text + Images)
+
+Apply critical reading techniques based on the purpose, combining both text and visual analysis:
+
+- **Identify key claims and arguments** from text
+- **Analyze figures, charts, and diagrams** for supporting evidence
+- **Note data from visualizations** (trends, comparisons, results)
 - **Mark areas of agreement/disagreement**
 - **Highlight technical terms and definitions**
-- **Note figures and diagrams for reference**
+- **Cross-reference text and figures** (e.g., "Figure 3 confirms the claim in paragraph 2")
+- **Identify visual patterns** not explicitly stated in text
 
-### Step 5: Create Annotations
+### Step 6: Create Annotations
 
 Use semantic highlighting to annotate the PDF:
 
@@ -135,18 +192,27 @@ zotero_create_highlight(
 )
 ```
 
-#### Area Annotations (`zotero_create_area_annotation`)
+#### Area Annotations for Figures (`zotero_create_area_annotation`)
 
-For figures, diagrams, or regions:
+**CRITICAL**: After analyzing a figure image, create an area annotation with insights from the visual analysis:
+
 ```
 zotero_create_area_annotation(
   attachment_key: "<key>",
   page: <1-based page number>,
-  rect: [x1, y1, x2, y2],
+  rect: [x1, y1, x2, y2],  # Use the rect from zotero_list_figures
   color: "<semantic color>",
-  comment: "<description>"
+  comment: "<description of what you saw in the image>"
 )
 ```
+
+**Example comment for a figure annotation:**
+```
+"Bar chart showing 3 algorithms. Algorithm A: 94% accuracy, Algorithm B: 87%, Algorithm C: 91%. 
+Algorithm A is clearly best but has higher latency (shown in Figure 4)."
+```
+
+This creates a visual annotation box around the figure with your detailed analysis embedded as a comment.
 
 ## Semantic Color Scheme
 
@@ -179,11 +245,15 @@ When `zotero_get_pdf_outline` returns `has_outline: false`:
 ## Best Practices
 
 1. **Check outline first**: Always call `zotero_get_pdf_outline` before reading unless pages are specified
-2. **Be precise with text**: The highlight text must match the PDF exactly (including spacing)
-3. **Add meaningful comments**: Explain why each highlight is significant
-4. **Use colors consistently**: Follow the semantic color scheme above
-5. **Summarize findings**: After annotating, provide a summary of key insights
-6. **Ask for clarification**: If page numbers or chapters are unclear, ask the user
+2. **Detect figures automatically**: After reading each page, call `zotero_list_figures` to find visual content
+3. **Extract important figures**: Use `zotero_get_figure` for figures with confidence ≥ 0.7 or that are referenced in text
+4. **Analyze images with vision AI**: Read the extracted figure files and describe what you see
+5. **Annotate figures with insights**: Create area annotations with detailed descriptions from image analysis
+6. **Be precise with text**: The highlight text must match the PDF exactly (including spacing)
+7. **Add meaningful comments**: Explain why each highlight is significant, incorporating visual evidence
+8. **Use colors consistently**: Follow the semantic color scheme above
+9. **Summarize findings**: After annotating, provide a summary combining text and visual insights
+10. **Ask for clarification**: If page numbers or chapters are unclear, ask the user
 
 ## Error Handling
 
@@ -192,12 +262,51 @@ When `zotero_get_pdf_outline` returns `has_outline: false`:
 - **Text not found**: Try adjusting the text (check for hyphenation, line breaks)
 - **Page out of range**: Verify the page count with the user
 - **Item not found**: Confirm the citation key is correct
+- **No figures detected**: This is normal for text-heavy pages; continue with text-only analysis
+- **Figure extraction fails**: Note the issue but continue with text analysis
 
 ## Output
 
 After completing the reading session, provide:
 
-1. **Summary of key findings**
+1. **Summary of key findings** (combining text and visual analysis)
 2. **List of annotations created** (with colors and comments)
-3. **Questions or areas needing clarification**
-4. **Suggested follow-up readings** (if applicable)
+   - Text highlights with their significance
+   - Figure annotations with visual analysis insights
+3. **Key insights from figures** (what the charts/diagrams reveal)
+4. **Questions or areas needing clarification**
+5. **Suggested follow-up readings** (if applicable)
+
+## Example Workflow: Reading with Images
+
+```
+User: /read smithML2023 chapters:"Results"
+
+AI Process:
+1. zotero_lookup("smithML2023") → Get attachment_key
+2. zotero_get_pdf_outline(key) → Find "Results" section on pages 15-20
+3. zotero_read_pdf_pages(key, section: "Results") → Extract text
+4. For each page (15-20):
+   a. zotero_list_figures(key, page: N) → Detect figures
+   b. If important figures found:
+      - zotero_get_figure(key, page: N, index: 0) → Extract image
+      - Analyze image with vision AI
+      - zotero_create_area_annotation with detailed description
+5. Create text highlights for key claims
+6. Provide summary combining text and visual analysis
+
+Response to User:
+"The Results section presents three key findings:
+
+1. Algorithm performance (Figure 5): Bar chart shows Algorithm X achieves 
+   94.5% accuracy vs 87.3% baseline, a 7.2 percentage point improvement.
+
+2. Latency comparison (Figure 6): Line graph indicates Algorithm X reduces 
+   average response time from 120ms to 45ms across all dataset sizes.
+
+3. Scalability (Figure 7): Scatter plot demonstrates consistent performance 
+   gains even with 10M+ records.
+
+I've created 8 annotations: 5 text highlights on key claims and 3 figure 
+annotations with detailed visual analysis from the charts."
+```
