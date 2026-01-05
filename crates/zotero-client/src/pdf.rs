@@ -10,9 +10,9 @@
 //! Requires the `pdf` feature to be enabled.
 
 use crate::error::{Result, ZoteroClientError};
-use crate::types::TextFragment;
+use crate::types::{OutlineItem, PdfOutline, TextFragment};
 
-use mupdf::{Document, Quad, TextPageOptions};
+use mupdf::{Document, Outline, Quad, TextPageOptions};
 use std::path::Path;
 
 /// A quad (4-point polygon) representing text position.
@@ -371,6 +371,193 @@ pub fn extract_text<P: AsRef<Path>>(path: P, page_num: usize) -> Result<String> 
     })
 }
 
+/// Convert mupdf Outline to our OutlineItem type.
+fn convert_outline(outline: &Outline) -> OutlineItem {
+    OutlineItem {
+        title: outline.title.clone(),
+        page: outline.page,
+        children: outline.down.iter().map(convert_outline).collect(),
+    }
+}
+
+/// Get the PDF outline (table of contents/bookmarks).
+///
+/// Returns a structured representation of the PDF's outline if one exists.
+/// The outline contains section titles and their starting page numbers.
+///
+/// # Arguments
+///
+/// * `path` - Path to the PDF file
+///
+/// # Example
+///
+/// ```no_run
+/// use zotero_client::pdf::get_pdf_outline;
+///
+/// let outline = get_pdf_outline("/path/to/file.pdf")?;
+/// if outline.has_outline {
+///     for item in &outline.items {
+///         println!("{} starts at page {:?}", item.title, item.page);
+///     }
+/// }
+/// # Ok::<(), zotero_client::error::ZoteroClientError>(())
+/// ```
+pub fn get_pdf_outline<P: AsRef<Path>>(path: P) -> Result<PdfOutline> {
+    let path = path.as_ref();
+
+    let doc = Document::open(path).map_err(|e| {
+        ZoteroClientError::Pdf(format!("Failed to open PDF '{}': {}", path.display(), e))
+    })?;
+
+    let total_pages = doc
+        .page_count()
+        .map(|c| c as usize)
+        .map_err(|e| ZoteroClientError::Pdf(format!("Failed to get page count: {}", e)))?;
+
+    let outlines = doc
+        .outlines()
+        .map_err(|e| ZoteroClientError::Pdf(format!("Failed to get outlines: {}", e)))?;
+
+    let has_outline = !outlines.is_empty();
+    let items: Vec<OutlineItem> = outlines.iter().map(convert_outline).collect();
+
+    Ok(PdfOutline {
+        has_outline,
+        total_pages,
+        items,
+    })
+}
+
+/// Find an outline item by title (case-insensitive, partial match supported).
+///
+/// Returns a tuple of (matching item, end page) where end page is determined
+/// by the next sibling's start page or the parent's end page.
+fn find_outline_item<'a>(
+    items: &'a [OutlineItem],
+    title: &str,
+    parent_end_page: usize,
+) -> Option<(&'a OutlineItem, usize)> {
+    let title_lower = title.to_lowercase();
+
+    for (i, item) in items.iter().enumerate() {
+        let item_title_lower = item.title.to_lowercase();
+
+        // Calculate this item's end page (next sibling or parent's end)
+        let item_end_page = if i + 1 < items.len() {
+            items[i + 1]
+                .page
+                .map(|p| p as usize)
+                .unwrap_or(parent_end_page)
+        } else {
+            parent_end_page
+        };
+
+        // Check for exact match or partial match
+        if item_title_lower == title_lower || item_title_lower.contains(&title_lower) {
+            return Some((item, item_end_page));
+        }
+
+        // Recursively search children, passing this item's end as their parent's end
+        if let Some(result) = find_outline_item(&item.children, title, item_end_page) {
+            return Some(result);
+        }
+    }
+
+    None
+}
+
+/// Resolve a section name to a page range using the PDF outline.
+///
+/// The section name is matched case-insensitively and supports partial matches.
+/// Returns (start_page, end_page) where both are 0-based page indices.
+///
+/// # Arguments
+///
+/// * `outline` - The PDF outline structure
+/// * `section` - The section name to search for
+///
+/// # Returns
+///
+/// A tuple of (start_page, end_page) where end_page is exclusive.
+/// Returns an error if the section is not found.
+///
+/// # Example
+///
+/// ```no_run
+/// use zotero_client::pdf::{get_pdf_outline, resolve_section_to_pages};
+///
+/// let outline = get_pdf_outline("/path/to/file.pdf")?;
+/// let (start, end) = resolve_section_to_pages(&outline, "Introduction")?;
+/// println!("Introduction spans pages {} to {}", start + 1, end);
+/// # Ok::<(), zotero_client::error::ZoteroClientError>(())
+/// ```
+pub fn resolve_section_to_pages(outline: &PdfOutline, section: &str) -> Result<(usize, usize)> {
+    if !outline.has_outline {
+        return Err(ZoteroClientError::Pdf(
+            "PDF has no outline. Use page numbers instead.".to_string(),
+        ));
+    }
+
+    match find_outline_item(&outline.items, section, outline.total_pages) {
+        Some((item, end_page)) => {
+            let start_page = item.page.map(|p| p as usize).unwrap_or(0);
+            Ok((start_page, end_page))
+        }
+        None => {
+            // Build a list of available sections for the error message
+            let available: Vec<String> = collect_section_names(&outline.items);
+            Err(ZoteroClientError::Pdf(format!(
+                "Section '{}' not found in outline. Available sections: {}",
+                section,
+                available.join(", ")
+            )))
+        }
+    }
+}
+
+/// Collect all section names from the outline (flattened).
+fn collect_section_names(items: &[OutlineItem]) -> Vec<String> {
+    let mut names = Vec::new();
+    for item in items {
+        names.push(item.title.clone());
+        names.extend(collect_section_names(&item.children));
+    }
+    names
+}
+
+/// Resolve multiple section names to a combined page range.
+///
+/// Section names can be comma-separated. Returns all pages covered by any of the sections.
+///
+/// # Arguments
+///
+/// * `outline` - The PDF outline structure
+/// * `sections` - Comma-separated section names
+///
+/// # Returns
+///
+/// A sorted, deduplicated list of 0-based page indices.
+pub fn resolve_sections_to_pages(outline: &PdfOutline, sections: &str) -> Result<Vec<usize>> {
+    let mut all_pages = Vec::new();
+
+    for section in sections.split(',') {
+        let section = section.trim();
+        if section.is_empty() {
+            continue;
+        }
+
+        let (start, end) = resolve_section_to_pages(outline, section)?;
+        for page in start..end {
+            if !all_pages.contains(&page) {
+                all_pages.push(page);
+            }
+        }
+    }
+
+    all_pages.sort_unstable();
+    Ok(all_pages)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -405,5 +592,208 @@ mod tests {
         assert_eq!(frag.rect[1], 20.0); // y1
         assert_eq!(frag.rect[2], 50.0); // x2
         assert_eq!(frag.rect[3], 35.0); // y2
+    }
+
+    #[test]
+    fn test_outline_item_creation() {
+        let item = OutlineItem {
+            title: "Introduction".to_string(),
+            page: Some(0),
+            children: vec![OutlineItem {
+                title: "Background".to_string(),
+                page: Some(2),
+                children: vec![],
+            }],
+        };
+
+        assert_eq!(item.title, "Introduction");
+        assert_eq!(item.page, Some(0));
+        assert_eq!(item.children.len(), 1);
+        assert_eq!(item.children[0].title, "Background");
+    }
+
+    #[test]
+    fn test_resolve_section_exact_match() {
+        let outline = PdfOutline {
+            has_outline: true,
+            total_pages: 20,
+            items: vec![
+                OutlineItem {
+                    title: "Introduction".to_string(),
+                    page: Some(0),
+                    children: vec![],
+                },
+                OutlineItem {
+                    title: "Methods".to_string(),
+                    page: Some(5),
+                    children: vec![],
+                },
+                OutlineItem {
+                    title: "Results".to_string(),
+                    page: Some(10),
+                    children: vec![],
+                },
+            ],
+        };
+
+        let (start, end) = resolve_section_to_pages(&outline, "Methods").unwrap();
+        assert_eq!(start, 5);
+        assert_eq!(end, 10); // Next section starts at 10
+    }
+
+    #[test]
+    fn test_resolve_section_case_insensitive() {
+        let outline = PdfOutline {
+            has_outline: true,
+            total_pages: 20,
+            items: vec![OutlineItem {
+                title: "Introduction".to_string(),
+                page: Some(0),
+                children: vec![],
+            }],
+        };
+
+        let (start, end) = resolve_section_to_pages(&outline, "introduction").unwrap();
+        assert_eq!(start, 0);
+        assert_eq!(end, 20); // Last section goes to end
+    }
+
+    #[test]
+    fn test_resolve_section_partial_match() {
+        let outline = PdfOutline {
+            has_outline: true,
+            total_pages: 20,
+            items: vec![OutlineItem {
+                title: "1. Introduction and Background".to_string(),
+                page: Some(0),
+                children: vec![],
+            }],
+        };
+
+        let (start, end) = resolve_section_to_pages(&outline, "Introduction").unwrap();
+        assert_eq!(start, 0);
+        assert_eq!(end, 20);
+    }
+
+    #[test]
+    fn test_resolve_section_not_found() {
+        let outline = PdfOutline {
+            has_outline: true,
+            total_pages: 20,
+            items: vec![OutlineItem {
+                title: "Introduction".to_string(),
+                page: Some(0),
+                children: vec![],
+            }],
+        };
+
+        let result = resolve_section_to_pages(&outline, "Nonexistent");
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("not found"));
+        assert!(err.contains("Introduction")); // Available sections listed
+    }
+
+    #[test]
+    fn test_resolve_section_no_outline() {
+        let outline = PdfOutline {
+            has_outline: false,
+            total_pages: 20,
+            items: vec![],
+        };
+
+        let result = resolve_section_to_pages(&outline, "Introduction");
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("no outline"));
+    }
+
+    #[test]
+    fn test_resolve_sections_multiple() {
+        let outline = PdfOutline {
+            has_outline: true,
+            total_pages: 20,
+            items: vec![
+                OutlineItem {
+                    title: "Introduction".to_string(),
+                    page: Some(0),
+                    children: vec![],
+                },
+                OutlineItem {
+                    title: "Methods".to_string(),
+                    page: Some(5),
+                    children: vec![],
+                },
+                OutlineItem {
+                    title: "Results".to_string(),
+                    page: Some(10),
+                    children: vec![],
+                },
+            ],
+        };
+
+        let pages = resolve_sections_to_pages(&outline, "Introduction,Results").unwrap();
+        // Introduction: 0-4, Results: 10-19
+        assert!(pages.contains(&0));
+        assert!(pages.contains(&4));
+        assert!(pages.contains(&10));
+        assert!(pages.contains(&19));
+        // Methods pages should not be included
+        assert!(!pages.contains(&6));
+    }
+
+    #[test]
+    fn test_resolve_nested_section() {
+        let outline = PdfOutline {
+            has_outline: true,
+            total_pages: 20,
+            items: vec![OutlineItem {
+                title: "Methods".to_string(),
+                page: Some(5),
+                children: vec![
+                    OutlineItem {
+                        title: "Data Collection".to_string(),
+                        page: Some(6),
+                        children: vec![],
+                    },
+                    OutlineItem {
+                        title: "Analysis".to_string(),
+                        page: Some(8),
+                        children: vec![],
+                    },
+                ],
+            }],
+        };
+
+        // Find nested section - sibling "Analysis" starts at 8, so Data Collection ends at 8
+        let (start, end) = resolve_section_to_pages(&outline, "Data Collection").unwrap();
+        assert_eq!(start, 6);
+        assert_eq!(end, 8); // Next sibling (Analysis) starts at 8
+    }
+
+    #[test]
+    fn test_collect_section_names() {
+        let items = vec![
+            OutlineItem {
+                title: "Introduction".to_string(),
+                page: Some(0),
+                children: vec![],
+            },
+            OutlineItem {
+                title: "Methods".to_string(),
+                page: Some(5),
+                children: vec![OutlineItem {
+                    title: "Data Collection".to_string(),
+                    page: Some(6),
+                    children: vec![],
+                }],
+            },
+        ];
+
+        let names = collect_section_names(&items);
+        assert_eq!(names.len(), 3);
+        assert!(names.contains(&"Introduction".to_string()));
+        assert!(names.contains(&"Methods".to_string()));
+        assert!(names.contains(&"Data Collection".to_string()));
     }
 }

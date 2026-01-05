@@ -13,7 +13,8 @@ use serde::{Deserialize, Serialize};
 use zotero_client::ZoteroClient;
 
 use crate::tools::{
-    create_area_annotation, create_highlight, lookup_item, read_pdf_pages, HighlightColorParam,
+    create_area_annotation, create_highlight, get_outline, lookup_item, read_pdf_pages,
+    HighlightColorParam,
 };
 
 /// MCP Server for Zotero integration.
@@ -31,11 +32,22 @@ pub struct LookupParams {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct GetPdfOutlineParams {
+    /// Zotero attachment key for the PDF
+    pub attachment_key: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ReadPdfPagesParams {
     /// Zotero attachment key for the PDF
     pub attachment_key: String,
-    /// Page range (e.g., "1-5", "1,3,5", "all")
-    pub pages: String,
+    /// Page range (e.g., "1-5", "1,3,5", "all"). Either pages or section is required.
+    #[serde(default)]
+    pub pages: Option<String>,
+    /// Section name(s) from PDF outline (e.g., "Introduction", "Introduction,Methods").
+    /// Requires PDF to have an outline/bookmarks. Either pages or section is required.
+    #[serde(default)]
+    pub section: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -95,19 +107,49 @@ impl ZoteroMcpServer {
         }
     }
 
+    /// Get the PDF outline (table of contents/bookmarks).
+    ///
+    /// Returns the document's outline structure with section titles and page numbers.
+    /// Use this to discover available sections before reading by section name.
+    #[tool(
+        name = "zotero_get_pdf_outline",
+        description = "Get PDF outline (table of contents/bookmarks). Returns section titles and page numbers. Use to discover sections before reading."
+    )]
+    async fn zotero_get_pdf_outline(
+        &self,
+        Parameters(params): Parameters<GetPdfOutlineParams>,
+    ) -> Result<CallToolResult, McpError> {
+        match get_outline(&self.client, &params.attachment_key).await {
+            Ok(outline) => {
+                // Format the outline for display
+                let json = serde_json::to_string_pretty(&outline)
+                    .unwrap_or_else(|_| "Failed to serialize outline".to_string());
+                Ok(CallToolResult::success(vec![Content::text(json)]))
+            }
+            Err(e) => Ok(CallToolResult::error(vec![Content::text(e.to_string())])),
+        }
+    }
+
     /// Extract text from specific pages of a PDF attachment.
     ///
     /// Supports page ranges (e.g., "1-5"), comma-separated pages (e.g., "1,3,5"),
-    /// or "all" for the entire document.
+    /// "all" for the entire document, or section names from the PDF outline.
     #[tool(
         name = "zotero_read_pdf_pages",
-        description = "Extract text from specific pages of a PDF attachment. Use page ranges like '1-5', '1,3,5', or 'all'."
+        description = "Extract text from specific pages of a PDF attachment. Use page ranges like '1-5', '1,3,5', or 'all'. Alternatively, use 'section' parameter with section names from the PDF outline."
     )]
     async fn zotero_read_pdf_pages(
         &self,
         Parameters(params): Parameters<ReadPdfPagesParams>,
     ) -> Result<CallToolResult, McpError> {
-        match read_pdf_pages(&self.client, &params.attachment_key, &params.pages).await {
+        match read_pdf_pages(
+            &self.client,
+            &params.attachment_key,
+            params.pages.as_deref(),
+            params.section.as_deref(),
+        )
+        .await
+        {
             Ok(result) => Ok(CallToolResult::success(vec![Content::text(result)])),
             Err(e) => Ok(CallToolResult::error(vec![Content::text(e.to_string())])),
         }
@@ -179,7 +221,8 @@ impl ServerHandler for ZoteroMcpServer {
             instructions: Some(
                 "Zotero MCP Server for AI-assisted critical reading. \
                 Use zotero_lookup to find items by citation key, \
-                zotero_read_pdf_pages to extract text, and \
+                zotero_get_pdf_outline to discover document sections, \
+                zotero_read_pdf_pages to extract text (by page or section), and \
                 zotero_create_highlight/zotero_create_area_annotation to annotate."
                     .to_string(),
             ),

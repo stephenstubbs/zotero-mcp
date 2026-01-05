@@ -405,3 +405,28 @@ pub struct TextFragment {
     /// Bounding rectangle [x1, y1, x2, y2] in PDF coordinates.
     pub rect: [f64; 4],
 }
+
+/// An outline item (bookmark/table of contents entry) from a PDF.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct OutlineItem {
+    /// The title of this outline item (e.g., "Introduction", "Chapter 1").
+    pub title: String,
+    /// Zero-based page number where this section starts.
+    /// None if the outline item doesn't link to a specific page.
+    pub page: Option<u32>,
+    /// Nested child outline items (subsections).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub children: Vec<OutlineItem>,
+}
+
+/// Response from PDF outline extraction.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PdfOutline {
+    /// Whether the PDF has an outline (table of contents).
+    pub has_outline: bool,
+    /// Total number of pages in the PDF.
+    pub total_pages: usize,
+    /// Top-level outline items.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub items: Vec<OutlineItem>,
+}

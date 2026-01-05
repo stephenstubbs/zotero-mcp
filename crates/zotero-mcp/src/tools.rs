@@ -3,8 +3,10 @@
 use rmcp::{schemars, schemars::JsonSchema};
 use serde::{Deserialize, Serialize};
 use zotero_client::{
-    pdf::{extract_text, get_page_count, search_for_rects},
-    types::{CreateAnnotationRequest, CreateAreaAnnotationRequest, HighlightColor},
+    pdf::{
+        extract_text, get_page_count, get_pdf_outline, resolve_sections_to_pages, search_for_rects,
+    },
+    types::{CreateAnnotationRequest, CreateAreaAnnotationRequest, HighlightColor, PdfOutline},
     ZoteroClient,
 };
 
@@ -62,6 +64,12 @@ pub enum ToolError {
 
     #[error("Text not found on page {0}: {1}")]
     TextNotFound(u32, String),
+
+    #[error("Section not found: {0}")]
+    SectionNotFound(String),
+
+    #[error("PDF has no outline. Please use page numbers instead.")]
+    NoOutline,
 
     #[error("Zotero client error: {0}")]
     ClientError(#[from] zotero_client::ZoteroClientError),
@@ -182,42 +190,76 @@ fn parse_page_range(pages: &str, total_pages: usize) -> Result<Vec<usize>, ToolE
     Ok(result)
 }
 
-/// Read text from specific pages of a PDF attachment.
-pub async fn read_pdf_pages(
-    client: &ZoteroClient,
-    attachment_key: &str,
-    pages: &str,
-) -> Result<String, ToolError> {
-    // Get the PDF file path by searching through all items
-    // The attachment_key should point to a PDF attachment directly
+/// Find the PDF file path for an attachment key.
+async fn find_pdf_path(client: &ZoteroClient, attachment_key: &str) -> Result<String, ToolError> {
     let items = client.list_items(500).await?;
-    let mut pdf_path: Option<String> = None;
 
     for parent_item in &items {
         let pdfs = client.get_pdf_attachments(&parent_item.key).await?;
         for pdf in pdfs {
             if pdf.key == attachment_key {
-                pdf_path = pdf.path;
-                break;
+                if let Some(path) = pdf.path {
+                    if std::path::Path::new(&path).exists() {
+                        return Ok(path);
+                    } else {
+                        return Err(ToolError::FileNotFound(path));
+                    }
+                }
             }
         }
-        if pdf_path.is_some() {
-            break;
-        }
     }
 
-    let path = pdf_path.ok_or_else(|| ToolError::PdfNotFound(attachment_key.to_string()))?;
+    Err(ToolError::PdfNotFound(attachment_key.to_string()))
+}
 
-    // Verify the file exists
-    if !std::path::Path::new(&path).exists() {
-        return Err(ToolError::FileNotFound(path));
-    }
+/// Get the PDF outline (table of contents/bookmarks).
+pub async fn get_outline(
+    client: &ZoteroClient,
+    attachment_key: &str,
+) -> Result<PdfOutline, ToolError> {
+    let path = find_pdf_path(client, attachment_key).await?;
+    get_pdf_outline(&path).map_err(|e| ToolError::PdfError(e.to_string()))
+}
+
+/// Read text from specific pages of a PDF attachment.
+/// Supports either page ranges or section names (if PDF has outline).
+pub async fn read_pdf_pages(
+    client: &ZoteroClient,
+    attachment_key: &str,
+    pages: Option<&str>,
+    section: Option<&str>,
+) -> Result<String, ToolError> {
+    let path = find_pdf_path(client, attachment_key).await?;
 
     // Get total page count
     let total_pages = get_page_count(&path).map_err(|e| ToolError::PdfError(e.to_string()))?;
 
-    // Parse the page range
-    let page_nums = parse_page_range(pages, total_pages)?;
+    // Determine which pages to read
+    let page_nums = match (pages, section) {
+        (Some(p), None) => {
+            // Use page range
+            parse_page_range(p, total_pages)?
+        }
+        (None, Some(s)) => {
+            // Use section names
+            let outline = get_pdf_outline(&path).map_err(|e| ToolError::PdfError(e.to_string()))?;
+            if !outline.has_outline {
+                return Err(ToolError::NoOutline);
+            }
+            resolve_sections_to_pages(&outline, s)
+                .map_err(|e| ToolError::SectionNotFound(e.to_string()))?
+        }
+        (Some(p), Some(_s)) => {
+            // Both provided - pages takes precedence
+            parse_page_range(p, total_pages)?
+        }
+        (None, None) => {
+            // Neither provided - error
+            return Err(ToolError::InvalidPageRange(
+                "Either 'pages' or 'section' parameter is required".to_string(),
+            ));
+        }
+    };
 
     // Extract text from each page
     let mut result = String::new();

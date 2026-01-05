@@ -56,6 +56,28 @@ The system SHALL expose an MCP tool `zotero_read_pdf_pages` to extract text from
 - **WHEN** the PDF file path from Zotero does not exist locally
 - **THEN** it returns an error indicating the file is missing
 
+#### Scenario: Read by section name
+- **WHEN** `zotero_read_pdf_pages` is called with `section: "Introduction"`
+- **THEN** it resolves the section name to a page range using the PDF outline
+- **AND** returns text content from that section's pages
+
+#### Scenario: Read multiple sections
+- **WHEN** `zotero_read_pdf_pages` is called with `section: "Introduction,Methods"`
+- **THEN** it resolves each section name to page ranges using the PDF outline
+- **AND** returns combined text content from all specified sections
+- **AND** each section's content is clearly delimited with section headers
+
+#### Scenario: Section not found
+- **WHEN** `zotero_read_pdf_pages` is called with `section: "NonExistent"`
+- **THEN** it returns an error indicating the section was not found
+- **AND** includes a list of available section names from the outline
+
+#### Scenario: Section requested but no outline
+- **WHEN** `zotero_read_pdf_pages` is called with `section` parameter
+- **AND** the PDF has no outline
+- **THEN** it returns an error indicating no outline exists
+- **AND** suggests using `pages` parameter instead
+
 ### Requirement: Highlight Creation Tool
 The system SHALL expose an MCP tool `zotero_create_highlight` for text highlights.
 
@@ -103,4 +125,22 @@ The system SHALL map semantic color names to hex codes.
   - detail → #aaaaaa (Grey)
   - negative → #ff6666 (Red)
   - code → #f19837 (Orange)
+
+### Requirement: PDF Outline Retrieval Tool
+The system SHALL expose an MCP tool `zotero_get_pdf_outline` to retrieve the document's table of contents.
+
+#### Scenario: PDF has outline
+- **WHEN** `zotero_get_pdf_outline` is called for a PDF with bookmarks
+- **THEN** it returns the outline structure with titles and page numbers
+- **AND** nested sections are represented as children
+
+#### Scenario: PDF has no outline
+- **WHEN** `zotero_get_pdf_outline` is called for a PDF without bookmarks
+- **THEN** it returns `has_outline: false` with an empty items array
+- **AND** the response indicates the user should provide page numbers
+
+#### Scenario: Include page count
+- **WHEN** `zotero_get_pdf_outline` is called
+- **THEN** the response includes `total_pages` field
+- **AND** AI can use this to estimate section lengths
 

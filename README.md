@@ -61,7 +61,8 @@ Add to your MCP configuration (e.g., `~/.config/opencode/mcp.json`):
 | Tool | Description |
 |------|-------------|
 | `zotero_lookup` | Find items by BetterBibTeX citation key |
-| `zotero_read_pdf_pages` | Extract text from PDF pages |
+| `zotero_get_pdf_outline` | Get PDF outline (table of contents/bookmarks) |
+| `zotero_read_pdf_pages` | Extract text from PDF pages or sections |
 | `zotero_create_highlight` | Create text highlights with semantic colors |
 | `zotero_create_area_annotation` | Create area annotations for figures |
 
@@ -100,12 +101,25 @@ This will:
    zotero_lookup(citekey: "smithML2023")
    ```
 
-2. **Read pages:**
+2. **Check for document outline (optional but recommended):**
    ```
+   zotero_get_pdf_outline(attachment_key: "ABC123")
+   ```
+   Returns section titles and page numbers if the PDF has bookmarks.
+
+3. **Read by pages or sections:**
+   ```
+   # By page range
    zotero_read_pdf_pages(attachment_key: "ABC123", pages: "1-10")
+   
+   # By section name (if outline exists)
+   zotero_read_pdf_pages(attachment_key: "ABC123", section: "Introduction")
+   
+   # Multiple sections
+   zotero_read_pdf_pages(attachment_key: "ABC123", section: "Introduction,Methods")
    ```
 
-3. **Highlight key findings:**
+4. **Highlight key findings:**
    ```
    zotero_create_highlight(
      attachment_key: "ABC123",

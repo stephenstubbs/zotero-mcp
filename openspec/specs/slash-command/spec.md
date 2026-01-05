@@ -16,7 +16,14 @@ The system SHALL provide a `/read` slash command for initiating critical reading
 
 #### Scenario: Invoke with citekey only
 - **WHEN** user invokes `/read smithML2023`
-- **THEN** the AI is instructed to read the full document
+- **THEN** the AI is instructed to check for outline bookmarks first
+- **AND** if outline exists, present available sections
+- **AND** if no outline, ask user for page numbers
+
+#### Scenario: Invoke with from_page parameter
+- **WHEN** user invokes `/read smithML2023 from_page:1`
+- **THEN** the AI skips outline lookup
+- **AND** reads starting from the specified page
 
 ### Requirement: Critical Reading Instructions
 The slash command SHALL provide AI with critical reading methodology.
@@ -55,7 +62,35 @@ The slash command SHALL instruct the AI on which MCP tools to use.
 - **WHEN** the slash command is invoked
 - **THEN** the AI is instructed to:
   1. Use `zotero_lookup` to find the item
-  2. Use `zotero_read_pdf_pages` to extract content
-  3. Use `zotero_create_highlight` for text annotations
-  4. Use `zotero_create_area_annotation` for figures/images
+  2. Use `zotero_get_pdf_outline` to check for bookmarks
+  3. If outline exists, use section names with `zotero_read_pdf_pages`
+  4. If no outline, ask user for page numbers or use `from_page` parameter
+  5. Use `zotero_create_highlight` for text annotations
+  6. Use `zotero_create_area_annotation` for figures/images
+
+#### Scenario: No outline fallback guidance
+- **WHEN** the slash command is invoked
+- **AND** the PDF has no outline bookmarks
+- **THEN** the AI is instructed to inform the user
+- **AND** ask for specific page numbers to read
+- **AND** offer to read from the beginning if user prefers
+
+### Requirement: Open Questions Workflow
+The slash command SHALL support an outline-first workflow for open questions reading.
+
+#### Scenario: Outline discovery
+- **WHEN** user invokes `/read` without specific pages
+- **THEN** the AI calls `zotero_get_pdf_outline` first
+- **AND** presents the document structure to guide reading
+
+#### Scenario: Section-based reading
+- **WHEN** outline exists with named sections
+- **THEN** the AI can read sections by name
+- **AND** uses outline to navigate logical document structure
+
+#### Scenario: Page-based fallback
+- **WHEN** no outline exists
+- **THEN** the AI explains that no bookmarks are available
+- **AND** asks user to provide page numbers
+- **AND** offers option to start from page 1
 
