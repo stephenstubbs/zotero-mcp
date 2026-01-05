@@ -11,7 +11,7 @@ Execute the /read command with the following arguments:
 ## Usage
 
 ```
-/read <citekey> [pages:<range>] [chapters:<names>] [from_page:<N>] [purpose:<text>]
+/read <citekey> [pages:<range>] [chapters:<names>] [from_page:<N>] [purpose:<text>] [strategy:<name>]
 ```
 
 ## Arguments
@@ -21,6 +21,19 @@ Execute the /read command with the following arguments:
 - `chapters:<names>` (optional): Chapter/section names to read (e.g., "Introduction,Methods")
 - `from_page:<N>` (optional): Start reading from page N (skips outline lookup)
 - `purpose:<text>` (optional): Reading purpose to focus analysis
+- `strategy:<name>` (optional): Reading strategy to use (default: "critical")
+
+## Available Strategies
+
+| Strategy | Command | Best For |
+|----------|---------|----------|
+| `critical` | `/read` (default) | General critical reading and analysis |
+| `sq3r` | `/read-sq3r` | Textbook learning, deep comprehension |
+| `review` | `/read-review` | Literature review, evidence extraction |
+| `analyze` | `/read-analyze` | Argument analysis, philosophical texts |
+| `skim` | `/read-skim` | Quick relevance assessment |
+
+Each strategy has a dedicated command file with detailed instructions. Use `/read strategy:<name>` for quick access or the dedicated commands for full documentation.
 
 ## Examples
 
@@ -29,6 +42,10 @@ Execute the /read command with the following arguments:
 /read jonesDeepLearning2024 chapters:"Introduction,Results"
 /read brownNLP2023
 /read brownNLP2023 from_page:1
+/read smithTextbook2023 strategy:sq3r
+/read jonesResearch2024 strategy:review
+/read brownPhilosophy2023 strategy:analyze
+/read smithPaper2024 strategy:skim
 ```
 
 ## Instructions for AI
@@ -39,8 +56,35 @@ When this command is invoked, parse the `<UserRequest>` block above to extract:
 3. `chapters:` - section names if provided  
 4. `from_page:` - starting page if provided
 5. `purpose:` - reading purpose if provided
+6. `strategy:` - reading strategy if provided (default: "critical")
 
-Then follow this critical reading workflow:
+### Strategy Routing
+
+If a `strategy:` parameter is provided, use the corresponding methodology:
+
+| Strategy Value | Behavior |
+|----------------|----------|
+| `critical` or not specified | Use the default critical reading workflow below |
+| `sq3r` | Follow the `/read-sq3r` methodology (Survey, Question, Read, Recite, Review) |
+| `review` | Follow the `/read-review` methodology (Evidence extraction for literature review) |
+| `analyze` | Follow the `/read-analyze` methodology (Deep argument analysis) |
+| `skim` | Follow the `/read-skim` methodology (Quick relevance assessment) |
+
+**Invalid strategy**: If an unknown strategy is specified, inform the user:
+```
+Unknown strategy "[name]". Available strategies:
+- critical (default): General critical reading
+- sq3r: Textbook learning methodology
+- review: Literature review extraction
+- analyze: Deep argument analysis
+- skim: Quick relevance assessment
+
+Use /read --help or see strategy-specific commands (/read-sq3r, /read-review, etc.) for details.
+```
+
+### Default Critical Reading Workflow
+
+When using the default "critical" strategy, follow this workflow:
 
 ### Step 1: Look Up the Item
 

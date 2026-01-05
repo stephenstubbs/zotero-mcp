@@ -16,14 +16,15 @@ The system SHALL provide a `/read` slash command for initiating critical reading
 
 #### Scenario: Invoke with citekey only
 - **WHEN** user invokes `/read smithML2023`
-- **THEN** the AI is instructed to check for outline bookmarks first
-- **AND** if outline exists, present available sections
-- **AND** if no outline, ask user for page numbers
+- **THEN** the AI is instructed to read the full document
 
-#### Scenario: Invoke with from_page parameter
-- **WHEN** user invokes `/read smithML2023 from_page:1`
-- **THEN** the AI skips outline lookup
-- **AND** reads starting from the specified page
+#### Scenario: Invoke with strategy parameter
+- **WHEN** user invokes `/read smithML2023 strategy:sq3r`
+- **THEN** the AI uses the SQ3R reading methodology instead of default critical reading
+
+#### Scenario: List available strategies
+- **WHEN** user invokes `/read --help` or requests strategy list
+- **THEN** the available strategies are displayed: critical, sq3r, review, analyze, skim
 
 ### Requirement: Critical Reading Instructions
 The slash command SHALL provide AI with critical reading methodology.
@@ -93,4 +94,23 @@ The slash command SHALL support an outline-first workflow for open questions rea
 - **THEN** the AI explains that no bookmarks are available
 - **AND** asks user to provide page numbers
 - **AND** offers option to start from page 1
+
+### Requirement: Strategy-Specific Commands
+The system SHALL provide dedicated commands for each reading strategy.
+
+#### Scenario: SQ3R command
+- **WHEN** user invokes `/read-sq3r citekey`
+- **THEN** it is equivalent to `/read citekey strategy:sq3r`
+
+#### Scenario: Review command
+- **WHEN** user invokes `/read-review citekey`
+- **THEN** it is equivalent to `/read citekey strategy:review`
+
+#### Scenario: Analyze command
+- **WHEN** user invokes `/read-analyze citekey`
+- **THEN** it is equivalent to `/read citekey strategy:analyze`
+
+#### Scenario: Skim command
+- **WHEN** user invokes `/read-skim citekey`
+- **THEN** it is equivalent to `/read citekey strategy:skim`
 
