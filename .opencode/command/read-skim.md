@@ -41,21 +41,38 @@ The Skim strategy is designed for rapid assessment of a paper's relevance and ke
 
 ## Color Scheme for Skimming
 
-Skim uses a **minimal color set** (3-4 colors) to avoid overhead:
+Skim uses a **minimal color set** (4 colors) to avoid overhead.
 
-| Color | Semantic Name | Skim Usage | Example |
-|-------|---------------|------------|---------|
-| `positive` (Green) | Key Findings | Main results, important conclusions | "Accuracy improved by 15%" |
-| `section1` (Blue) | Main Topic | Core subject/contribution | "We propose a novel architecture" |
-| `question` (Yellow) | Relevance Flag | Points relevant to your focus | "Applicable to NLP tasks" |
-| `negative` (Red) | Concern/Limitation | Major limitations or red flags | "Only tested on synthetic data" |
+### Hierarchy Colors (Optional - for document structure)
+
+| Color | Hex | Skim Usage | Obsidian Result |
+|-------|-----|------------|-----------------|
+| `section1` (Blue) | #2ea8e5 | Section headings (if marking structure) | `## Heading` (H2) |
+
+### Semantic Colors (Content Meaning)
+
+| Color | Hex | Skim Usage | Comment Prefix | Example |
+|-------|-----|------------|----------------|---------|
+| `positive` (Green) | #5fb236 | Key findings, core contribution | `FINDING:`, `CORE:` | "FINDING: Accuracy improved 15%" |
+| `question` (Yellow) | #ffd400 | Relevance flags for focus topic | `RELEVANT:` | "RELEVANT: Applies to NLP tasks" |
+| `negative` (Red) | #ff6666 | Major limitations, red flags | `CONCERN:` | "CONCERN: Only synthetic data" |
+| `detail` (Grey) | #aaaaaa | Core contribution (alternative to Green) | `CORE:` | "CORE: Novel architecture proposed" |
+
+### Comment Prefixes for Skimming
+
+| Prefix | Color | Usage |
+|--------|-------|-------|
+| `CORE:` | Green or Grey | Core contribution/subject of paper |
+| `FINDING:` | Green | Key results and conclusions |
+| `RELEVANT:` | Yellow | Points matching your focus topic |
+| `CONCERN:` | Red | Major limitations or red flags |
+| `KEY FIGURE:` | Green | Important figure (caption only) |
 
 ### Colors NOT Used in Skim Strategy
 
-To keep skimming fast, these colors are **not used**:
+To keep skimming fast, these colors are **typically not used**:
 - `section2` (Purple) - Too detailed for skimming
 - `section3` (Magenta) - Too detailed for skimming
-- `detail` (Grey) - Background info not needed for skim
 - `code` (Orange) - Technical details saved for full reading
 
 ### Annotation Philosophy
@@ -107,13 +124,13 @@ When this command is invoked, execute a rapid skim reading focused on speed and 
    - Approach/method (one line)
    - Key finding/contribution
 
-3. **One annotation only** (Blue - main topic):
+3. **One annotation only** (Green or Grey - core contribution):
    ```
    zotero_create_highlight(
      attachment_key: "<key>",
      text: "<core contribution sentence>",
      page: 1,
-     color: "section1",
+     color: "positive",
      comment: "CORE: <one-line summary>"
    )
    ```
@@ -204,9 +221,9 @@ When this command is invoked, execute a rapid skim reading focused on speed and 
    - Gap in existing work
    - Paper's contribution claims
 
-3. **One annotation if valuable** (Blue or Yellow):
-   - Blue if it clarifies the contribution
-   - Yellow if it connects to your focus topic
+3. **One annotation if valuable** (Green or Yellow):
+   - Green (`CORE:`) if it clarifies the contribution
+   - Yellow (`RELEVANT:`) if it connects to your focus topic
 
 ## Output: Skim Summary
 

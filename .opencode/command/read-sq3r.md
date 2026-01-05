@@ -35,24 +35,41 @@ SQ3R (Survey, Question, Read, Recite, Review) is a structured reading methodolog
 
 ## Color Scheme for SQ3R
 
-SQ3R uses colors to distinguish different types of information across phases:
+SQ3R uses colors to distinguish different types of information across phases.
 
-| Color | Semantic Name | SQ3R Usage | Example |
-|-------|---------------|------------|---------|
-| `section1` (Blue) | Structure-Primary | Main chapter/section headings during Survey | "Chapter 5: Data Structures" |
-| `section2` (Purple) | Structure-Secondary | Subsection headings during Survey | "5.2 Binary Trees" |
-| `section3` (Magenta) | Structure-Tertiary | Sub-subsections or key topics | "5.2.1 Balanced Trees" |
-| `question` (Yellow) | Questions | Questions generated during Question phase | "What is the purpose of balancing?" |
-| `positive` (Green) | Answers/Key Points | Answers found during Read phase | "Balancing ensures O(log n) time" |
-| `negative` (Red) | Confusion/Review | Areas needing review or unclear concepts | "How does rotation work exactly?" |
-| `detail` (Grey) | Supporting Details | Examples, definitions, supporting info | "Example: AVL tree rotation" |
-| `code` (Orange) | Technical Content | Code, formulas, algorithms | "rotateLeft(node)" |
+### Hierarchy Colors (Generate Obsidian Headings)
+
+| Color | Hex | SQ3R Usage | Obsidian Result |
+|-------|-----|------------|-----------------|
+| `section1` (Blue) | #2ea8e5 | Main chapter/section headings during Survey | `## Heading` (H2) |
+| `section2` (Purple) | #a28ae5 | Subsection headings during Survey | `### Heading` (H3) |
+| `section3` (Magenta) | #e56eee | Sub-subsections or key topics | `#### Heading` (H4) |
+
+### Semantic Colors (Content Meaning)
+
+| Color | Hex | SQ3R Usage | Comment Prefix | Example |
+|-------|-----|------------|----------------|---------|
+| `positive` (Green) | #5fb236 | Answers/Key Points | `A:` | "A: Balancing ensures O(log n) time" |
+| `negative` (Red) | #ff6666 | Confusion/Review needed | `UNCLEAR:` | "UNCLEAR: How does rotation work?" |
+| `question` (Yellow) | #ffd400 | Questions generated | `Q:` | "Q: What is the purpose of balancing?" |
+| `detail` (Grey) | #aaaaaa | Supporting details, definitions | `DETAIL:` | "DETAIL: AVL tree rotation example" |
+| `code` (Orange) | #f19837 | Code, formulas, algorithms | `CODE:` | "CODE: rotateLeft(node)" |
+
+### Comment Prefixes for SQ3R
+
+| Prefix | Color | Usage |
+|--------|-------|-------|
+| `Q:` | Yellow | Questions generated during Question phase |
+| `A:` | Green | Answers found during Read phase |
+| `UNCLEAR:` | Red | Areas needing review or clarification |
+| `DETAIL:` | Grey | Supporting information, examples |
+| `CODE:` | Orange | Technical content explanation |
 
 ### Color Usage by Phase
 
-- **Survey Phase**: Blue, Purple, Magenta (structure)
-- **Question Phase**: Yellow (questions)
-- **Read Phase**: Green (answers), Red (confusion), Grey (details), Orange (technical)
+- **Survey Phase**: Blue, Purple, Magenta (document structure → becomes Obsidian headings)
+- **Question Phase**: Yellow with `Q:` prefix
+- **Read Phase**: Green (`A:`), Red (`UNCLEAR:`), Grey (`DETAIL:`), Orange (`CODE:`)
 - **Recite Phase**: Comments on existing highlights
 - **Review Phase**: Final note summarizing all colors
 

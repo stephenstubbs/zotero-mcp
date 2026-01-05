@@ -38,16 +38,35 @@ Phase 4 builds ON TOP of this workflow rather than replacing it.
 
 ### Color Semantics in Template
 
-| Color | Hex | Template Behavior |
-|-------|-----|-------------------|
-| Blue | `#2ea8e5` | Creates `##` heading from comment |
-| Purple | `#a28ae5` | Creates `###` heading from comment |
-| Magenta | `#e56eee` | Creates `####` heading from comment |
-| Green | `#5fb236` | Positive point (bold comment) |
-| Grey | `#aaaaaa` | Detail (bold comment) |
-| Red | `#ff6666` | Negative point (bold comment) |
-| Orange | `#f19837` | Code block with comment as language |
-| Yellow | `#ffd400` | Question / Uncertainty (bold comment) |
+Colors are divided into two categories based on `update-section-color-semantics`:
+
+#### Hierarchy Colors (Document Structure)
+These generate **Obsidian headings** and represent document structure, NOT semantic content:
+
+| Color | Hex | Template Behavior | Use In Synthesis |
+|-------|-----|-------------------|------------------|
+| Blue (section1) | `#2ea8e5` | Creates `##` heading | Organizational structure |
+| Purple (section2) | `#a28ae5` | Creates `###` heading | Sub-section structure |
+| Magenta (section3) | `#e56eee` | Creates `####` heading | Minor heading structure |
+
+#### Semantic Colors (Content Meaning)
+These mark **content types** and should be used for synthesis grouping:
+
+| Color | Hex | Template Behavior | Use In Synthesis |
+|-------|-----|-------------------|------------------|
+| Green (positive) | `#5fb236` | Bold comment | Key findings, evidence, claims |
+| Grey (detail) | `#aaaaaa` | Bold comment | Definitions, methodology, context |
+| Red (negative) | `#ff6666` | Bold comment | Criticisms, limitations, concerns |
+| Orange (code) | `#f19837` | Code block | Technical content, statistics |
+| Yellow (question) | `#ffd400` | Bold comment | Questions, gaps, uncertainties |
+
+#### Comment Prefixes for Finer Categorization
+Semantic colors can be further categorized by comment prefixes:
+- `positive`: `THESIS:`, `PREMISE:`, `EVIDENCE:`, `CLAIM:`, `A:`, `FINDING:`, `CORE:`
+- `negative`: `WEAKNESS:`, `LIMITATION:`, `UNCLEAR:`, `CONCERN:`
+- `question`: `Q:`, `GAP:`, `UNCLEAR:`, `RELEVANT:`
+- `detail`: `ASSUMPTION:`, `TERM:`, `CONNECTION:`, `METHOD:`, `THEME [x]:`, `DETAIL:`
+- `code`: `STAT:`, `CODE:`, `DATA:`
 
 ## Goals / Non-Goals
 
@@ -293,14 +312,21 @@ created: 2024-01-15
 ### Parser Implementation
 
 ```rust
+enum ColorCategory {
+    Hierarchy,  // section1, section2, section3 - for document structure
+    Semantic,   // positive, negative, question, detail, code - for content meaning
+}
+
 struct ParsedAnnotation {
     annotation_type: AnnotationType,  // highlight, note, image
     color: SemanticColor,
     color_hex: String,
+    color_category: ColorCategory,    // NEW: hierarchy vs semantic
     text: Option<String>,
     comment: Option<String>,
+    comment_prefix: Option<String>,   // NEW: extracted prefix like "THESIS:", "Q:"
     page: Option<String>,
-    heading_level: Option<u8>,  // 2, 3, or 4 for ##, ###, ####
+    heading_level: Option<u8>,        // 2, 3, or 4 for ##, ###, #### (hierarchy colors only)
     image_path: Option<String>,
 }
 
@@ -309,6 +335,26 @@ struct ParsedAnnotation {
 // ## **Comment text**
 // Annotation text content
 // [@citekey p. 5]
+```
+
+### Comment Prefix Extraction
+
+```rust
+// Extract prefix from comment like "THESIS: Main argument here"
+fn extract_comment_prefix(comment: &str) -> (Option<String>, String) {
+    let prefixes = ["THESIS:", "PREMISE:", "EVIDENCE:", "CLAIM:", "A:", "FINDING:", 
+                    "CORE:", "WEAKNESS:", "LIMITATION:", "UNCLEAR:", "CONCERN:",
+                    "Q:", "GAP:", "RELEVANT:", "ASSUMPTION:", "TERM:", 
+                    "CONNECTION:", "METHOD:", "THEME", "DETAIL:", "STAT:", 
+                    "CODE:", "DATA:"];
+    
+    for prefix in prefixes {
+        if comment.starts_with(prefix) || comment.starts_with(&format!("**{}**", prefix)) {
+            return (Some(prefix.to_string()), comment[prefix.len()..].trim().to_string());
+        }
+    }
+    (None, comment.to_string())
+}
 ```
 
 ### Color Detection Regex
@@ -324,6 +370,44 @@ struct ParsedAnnotation {
 ## Synthesis Output Format
 
 ### Single Document Summary
+
+The synthesis output uses **section colors for structure** and **semantic colors for content grouping**.
+
+#### When Section Colors Present (Structure-Aware)
+If the source document has section1/2/3 annotations, use them as the organizational backbone:
+
+```markdown
+---
+type: summary
+source: "[[smithML2023]]"
+created: 2024-01-15
+status: draft
+---
+
+# Summary: {{title}}
+
+> [!info] Source
+> [[@smithML2023]] - {{authors}}, {{year}}
+
+## {{section1_heading}}  <!-- From blue annotation comment -->
+
+### Key Points
+{{#each section1_positive_annotations}}
+- {{text}} ([[smithML2023#p. {{page}}|p. {{page}}]])
+{{/each}}
+
+### Critical Notes
+{{#each section1_negative_annotations}}
+- {{text}} ([[smithML2023#p. {{page}}|p. {{page}}]])
+{{/each}}
+
+## {{section1_heading_2}}  <!-- Next blue annotation -->
+...
+```
+
+#### When No Section Colors (Semantic Grouping)
+Fall back to grouping by semantic color when no structural annotations exist:
+
 ```markdown
 ---
 type: summary
@@ -347,14 +431,21 @@ status: draft
 - {{text}} ([[smithML2023#p. {{page}}|p. {{page}}]])
 {{/each}}
 
-## Structure
-{{#each section_annotations}}
-{{heading}} {{comment}}
-- {{text}}
+## Questions & Gaps
+{{#each question_annotations}}
+- {{text}} ([[smithML2023#p. {{page}}|p. {{page}}]])
+{{/each}}
+
+## Methodology & Context
+{{#each detail_annotations}}
+- {{text}} ([[smithML2023#p. {{page}}|p. {{page}}]])
 {{/each}}
 ```
 
 ### Multi-Document Synthesis
+
+For multi-document synthesis, identify **common themes from section headings** across documents and group related semantic annotations under shared themes.
+
 ```markdown
 ---
 type: synthesis
@@ -371,25 +462,38 @@ created: 2024-01-15
 ## Overview
 {{ai_generated_overview}}
 
-## Findings by Source
+## Common Themes
 
-### From [[@smithML2023]]
-{{#each smith_annotations}}
+### {{theme_from_section_headings}}
+<!-- Group annotations from all sources that fall under this theme -->
+
+**From [[@smithML2023]]:**
+{{#each smith_theme_annotations}}
 - {{text}} (p. {{page}})
 {{/each}}
 
-### From [[@jonesAI2024]]
-{{#each jones_annotations}}
+**From [[@jonesAI2024]]:**
+{{#each jones_theme_annotations}}
 - {{text}} (p. {{page}})
 {{/each}}
 
-## Themes
+### {{another_theme}}
+...
 
-### {{theme_1}}
-{{theme_1_synthesis}}
+## Key Findings (Positive)
+{{#each all_positive_annotations}}
+- {{text}} - [[@{{source}}]] (p. {{page}})
+{{/each}}
 
-### {{theme_2}}
-{{theme_2_synthesis}}
+## Critical Points (Negative)
+{{#each all_negative_annotations}}
+- {{text}} - [[@{{source}}]] (p. {{page}})
+{{/each}}
+
+## Open Questions
+{{#each all_question_annotations}}
+- {{text}} - [[@{{source}}]] (p. {{page}})
+{{/each}}
 
 ## Contradictions & Gaps
 {{contradictions}}

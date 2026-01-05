@@ -43,25 +43,49 @@ Analytical Reading (based on Mortimer Adler's levels of reading) is designed for
 
 ## Color Scheme for Analytical Reading
 
-Analytical Reading uses colors to map the logical structure of arguments:
+Analytical Reading uses colors to map the logical structure of arguments.
 
-| Color | Semantic Name | Analysis Usage | Example |
-|-------|---------------|----------------|---------|
-| `section1` (Blue) | Premises | Claims used to support conclusions | "Studies show that X leads to Y" |
-| `section2` (Purple) | Conclusions | Main thesis and derived conclusions | "Therefore, we should adopt policy Z" |
-| `positive` (Green) | Evidence | Strong supporting evidence, data | "In 95% of cases, the prediction held" |
-| `negative` (Red) | Weaknesses | Logical gaps, unsupported claims, fallacies | "This assumes without proof that..." |
-| `detail` (Grey) | Assumptions | Unstated assumptions, definitions | "The author assumes readers accept utilitarianism" |
-| `code` (Orange) | Data/Formulas | Quantitative support, formal logic | "P(A|B) > P(A)" |
-| `question` (Yellow) | Unclear/Questions | Ambiguous arguments, needs clarification | "What does 'significant' mean here?" |
-| `section3` (Magenta) | Connections | Links to other works, implications | "This contradicts Smith (2020)" |
+### Hierarchy Colors (Generate Obsidian Headings)
+
+| Color | Hex | Analysis Usage | Obsidian Result |
+|-------|-----|----------------|-----------------|
+| `section1` (Blue) | #2ea8e5 | Document section headings only | `## Heading` (H2) |
+| `section2` (Purple) | #a28ae5 | Subsection headings only | `### Heading` (H3) |
+| `section3` (Magenta) | #e56eee | Sub-subsection headings only | `#### Heading` (H4) |
+
+### Semantic Colors (Content Meaning)
+
+| Color | Hex | Analysis Usage | Comment Prefix | Example |
+|-------|-----|----------------|----------------|---------|
+| `positive` (Green) | #5fb236 | Premises, thesis, conclusions, evidence | `PREMISE:`, `THESIS:`, `CONCLUSION:`, `EVIDENCE:` | "PREMISE [P1]: Studies show X leads to Y" |
+| `negative` (Red) | #ff6666 | Weaknesses, logical gaps, fallacies | `WEAKNESS:` | "WEAKNESS: Unsupported claim" |
+| `question` (Yellow) | #ffd400 | Unclear arguments, ambiguity | `UNCLEAR:` | "UNCLEAR: What does 'significant' mean?" |
+| `detail` (Grey) | #aaaaaa | Assumptions, definitions, connections | `ASSUMPTION:`, `TERM:`, `CONNECTION:` | "ASSUMPTION: Author assumes utilitarianism" |
+| `code` (Orange) | #f19837 | Quantitative support, formal logic | `DATA:`, `FORMULA:` | "DATA: P(A|B) > P(A)" |
+
+### Comment Prefixes for Analytical Reading
+
+| Prefix | Color | Usage |
+|--------|-------|-------|
+| `THESIS:` | Green | Main thesis statement |
+| `PREMISE [Pn]:` | Green | Numbered premises (P1, P2, P3...) |
+| `CONCLUSION [Cn]:` | Green | Numbered conclusions (C1, C2...) |
+| `EVIDENCE:` | Green | Supporting evidence for premises/conclusions |
+| `WEAKNESS:` | Red | Logical gaps, unsupported claims, fallacies |
+| `UNCLEAR:` | Yellow | Ambiguous arguments needing clarification |
+| `ASSUMPTION:` | Grey | Unstated assumptions author relies on |
+| `TERM:` | Grey | Key term definitions |
+| `CONNECTION:` | Grey | Links to other works, implications |
+| `DATA:` | Orange | Quantitative support |
+| `FORMULA:` | Orange | Formal logic expressions |
 
 ### Color Usage by Phase
 
-- **Structural Analysis**: Blue (premises), Purple (conclusions)
-- **Interpretation**: Grey (assumptions), Green (evidence)
-- **Critique**: Red (weaknesses), Yellow (unclear)
-- **Integration**: Magenta (connections), Orange (formal elements)
+- **Structural Analysis**: Green (`THESIS:`, `PREMISE [Pn]:`, `CONCLUSION [Cn]:`)
+- **Interpretation**: Grey (`ASSUMPTION:`, `TERM:`), Green (`EVIDENCE:`)
+- **Critique**: Red (`WEAKNESS:`), Yellow (`UNCLEAR:`)
+- **Integration**: Grey (`CONNECTION:`), Orange (`DATA:`, `FORMULA:`)
+- **Document Structure**: Blue/Purple/Magenta (headings only)
 
 ## Instructions for AI
 
@@ -88,13 +112,13 @@ When this command is invoked, execute Analytical Reading through four phases. Th
    zotero_read_pdf_pages(attachment_key: "<key>", section: "Conclusion")
    ```
 
-4. **Highlight the main thesis** (Purple):
+4. **Highlight the main thesis** (Green with `THESIS:` prefix):
    ```
    zotero_create_highlight(
      attachment_key: "<key>",
      text: "<thesis statement>",
      page: <page>,
-     color: "section2",
+     color: "positive",
      comment: "THESIS: <restated in your words>"
    )
    ```
@@ -103,26 +127,26 @@ When this command is invoked, execute Analytical Reading through four phases. Th
    - Read through the full text
    - Identify each major claim/premise
    
-6. **Highlight premises** (Blue):
+6. **Highlight premises** (Green with `PREMISE [Pn]:` prefix):
    ```
    zotero_create_highlight(
      attachment_key: "<key>",
      text: "<premise text>",
      page: <page>,
-     color: "section1",
+     color: "positive",
      comment: "PREMISE [P1]: <restated> | Supports: <which conclusion>"
    )
    ```
    
    Number premises (P1, P2, P3...) to track the argument chain.
 
-7. **Highlight sub-conclusions** (Purple):
+7. **Highlight sub-conclusions** (Green with `CONCLUSION [Cn]:` prefix):
    ```
    zotero_create_highlight(
      attachment_key: "<key>",
      text: "<conclusion text>",
      page: <page>,
-     color: "section2",
+     color: "positive",
      comment: "CONCLUSION [C1]: <restated> | Derived from: P1, P3"
    )
    ```
@@ -262,13 +286,13 @@ Argument Evaluation:
 
 **Goal**: Connect to broader context and draw implications.
 
-1. **Note connections to other works** (Magenta):
+1. **Note connections to other works** (Grey with `CONNECTION:` prefix):
    ```
    zotero_create_highlight(
      attachment_key: "<key>",
      text: "<text referencing or relating to other work>",
      page: <page>,
-     color: "section3",
+     color: "detail",
      comment: "CONNECTION: <relationship to other work/idea>"
    )
    ```
@@ -368,13 +392,13 @@ THESIS: [Main conclusion]
 **Key Insight**: [Most valuable takeaway]
 
 ### Annotations Created
-- X premises highlighted (blue)
-- Y conclusions highlighted (purple)
-- Z evidence marked (green)
-- N weaknesses flagged (red)
-- M assumptions noted (grey)
-- K unclear points (yellow)
-- J connections (magenta)
+- X thesis/premises/conclusions highlighted (green)
+- Y evidence marked (green)
+- Z weaknesses flagged (red)
+- N assumptions/definitions/connections noted (grey)
+- M unclear points (yellow)
+- K data/formulas (orange)
+- J structure headings (blue/purple/magenta)
 
 ### Questions for Further Investigation
 1. [Question 1]

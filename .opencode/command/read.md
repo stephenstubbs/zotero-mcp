@@ -258,22 +258,49 @@ Algorithm A is clearly best but has higher latency (shown in Figure 4)."
 
 This creates a visual annotation box around the figure with your detailed analysis embedded as a comment.
 
-## Semantic Color Scheme
+## Color Philosophy
 
-Use these colors consistently for meaning:
+Colors are divided into two categories:
 
-| Color | Hex | Use For |
-|-------|-----|---------|
-| `section1` | #2ea8e5 (Blue) | Main thesis / Primary arguments |
-| `section2` | #a28ae5 (Purple) | Supporting arguments |
-| `section3` | #e56eee (Magenta) | Methodology / Framework |
-| `positive` | #5fb236 (Green) | Points of agreement / Strong evidence |
-| `detail` | #aaaaaa (Grey) | Background info / Context / Definitions |
-| `negative` | #ff6666 (Red) | Critique / Weak points / Disagreement |
-| `code` | #f19837 (Orange) | Code snippets / Technical formulas |
-| `question` | #ffd400 (Yellow) | Questions / Uncertainties / Needs clarification |
+### Hierarchy Colors (Section Colors)
+These colors generate **headings in Obsidian** when imported. Use them ONLY for document structure:
+- `section1` (Blue) → H2 heading in Obsidian
+- `section2` (Purple) → H3 heading in Obsidian
+- `section3` (Magenta) → H4 heading in Obsidian
 
-**Note**: Different reading strategies may interpret colors differently. See strategy-specific command files (e.g., `/read-sq3r`, `/read-review`) for their color mappings.
+### Semantic Colors (Content Colors)
+These colors mark content meaning. Use **comment prefixes** to sub-categorize:
+- `positive` (Green) → Positive points, evidence, answers
+- `negative` (Red) → Criticisms, weaknesses, concerns
+- `question` (Yellow) → Questions, gaps, uncertainties
+- `detail` (Grey) → Context, definitions, methodology
+- `code` (Orange) → Technical content, statistics, formulas
+
+## Complete Color Reference
+
+| Color | Hex | Category | Use For | Comment Prefixes |
+|-------|-----|----------|---------|------------------|
+| `section1` | #2ea8e5 (Blue) | Hierarchy | Document section headings (H2) | *(text becomes heading)* |
+| `section2` | #a28ae5 (Purple) | Hierarchy | Subsection headings (H3) | *(text becomes heading)* |
+| `section3` | #e56eee (Magenta) | Hierarchy | Sub-subsection headings (H4) | *(text becomes heading)* |
+| `positive` | #5fb236 (Green) | Semantic | Thesis, premises, evidence, claims, answers, findings | `THESIS:`, `PREMISE:`, `EVIDENCE:`, `CLAIM:`, `A:`, `FINDING:`, `CORE:` |
+| `negative` | #ff6666 (Red) | Semantic | Weaknesses, limitations, confusion, concerns | `WEAKNESS:`, `LIMITATION:`, `UNCLEAR:`, `CONCERN:` |
+| `question` | #ffd400 (Yellow) | Semantic | Questions, gaps, unclear points, relevance flags | `Q:`, `GAP:`, `UNCLEAR:`, `RELEVANT:` |
+| `detail` | #aaaaaa (Grey) | Semantic | Assumptions, definitions, connections, methodology, themes | `ASSUMPTION:`, `TERM:`, `CONNECTION:`, `METHOD:`, `THEME [x]:`, `DETAIL:` |
+| `code` | #f19837 (Orange) | Semantic | Code, statistics, formulas, data | `STAT:`, `CODE:`, `DATA:` |
+
+### Obsidian Integration
+
+The Obsidian Zotero import template generates markdown headings from section colors:
+```
+Blue highlight    → ## Highlighted Text
+Purple highlight  → ### Highlighted Text  
+Magenta highlight → #### Highlighted Text
+```
+
+This means section colors should mark **actual document structure** (chapter titles, section names) rather than semantic content types.
+
+**Note**: Different reading strategies may interpret semantic colors differently. See strategy-specific command files (e.g., `/read-sq3r`, `/read-review`) for their specific color mappings and comment prefixes.
 
 ## Fallback Behavior: No Outline Available
 

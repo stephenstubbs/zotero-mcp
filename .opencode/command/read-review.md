@@ -35,25 +35,45 @@ The Literature Review strategy is designed for systematic evidence extraction fr
 
 ## Color Scheme for Literature Review
 
-Literature Review uses colors to categorize different types of evidence:
+Literature Review uses colors to categorize different types of evidence.
 
-| Color | Semantic Name | Review Usage | Example |
-|-------|---------------|--------------|---------|
-| `positive` (Green) | Supported Claims | Key findings, supported claims, strong evidence | "Results showed 95% accuracy (p<0.001)" |
-| `negative` (Red) | Limitations | Limitations, weaknesses, threats to validity | "Sample size was limited to 50 participants" |
-| `question` (Yellow) | Research Gaps | Gaps in literature, future research directions | "No studies have examined long-term effects" |
-| `section1` (Blue) | Theme Category 1 | Primary thematic grouping | Claims related to "performance" |
-| `section2` (Purple) | Theme Category 2 | Secondary thematic grouping | Claims related to "methodology" |
-| `section3` (Magenta) | Theme Category 3 | Tertiary thematic grouping | Claims related to "applications" |
-| `detail` (Grey) | Methodology | Study design, sample details, procedures | "N=200 participants, randomized controlled trial" |
-| `code` (Orange) | Data/Statistics | Numbers, statistics, quantitative results | "r=0.85, p<0.05, CI [0.78, 0.92]" |
+### Hierarchy Colors (Generate Obsidian Headings)
+
+| Color | Hex | Review Usage | Obsidian Result |
+|-------|-----|--------------|-----------------|
+| `section1` (Blue) | #2ea8e5 | Document section headings (e.g., "Methods", "Results") | `## Heading` (H2) |
+| `section2` (Purple) | #a28ae5 | Subsection headings | `### Heading` (H3) |
+| `section3` (Magenta) | #e56eee | Sub-subsection headings | `#### Heading` (H4) |
+
+### Semantic Colors (Content Meaning)
+
+| Color | Hex | Review Usage | Comment Prefix | Example |
+|-------|-----|--------------|----------------|---------|
+| `positive` (Green) | #5fb236 | Key findings, supported claims | `CLAIM:` | "CLAIM: Deep learning outperforms ML" |
+| `negative` (Red) | #ff6666 | Limitations, biases, weaknesses | `LIMITATION:` | "LIMITATION: Small sample size" |
+| `question` (Yellow) | #ffd400 | Research gaps, future directions | `GAP:` | "GAP: No long-term studies exist" |
+| `detail` (Grey) | #aaaaaa | Methodology, themes, context | `METHOD:`, `THEME [x]:` | "METHOD: Randomized controlled trial" |
+| `code` (Orange) | #f19837 | Statistics, quantitative results | `STAT:` | "STAT: r=0.85, p<0.05" |
+
+### Comment Prefixes for Literature Review
+
+| Prefix | Color | Usage |
+|--------|-------|-------|
+| `CLAIM:` | Green | Supported claims with evidence strength |
+| `LIMITATION:` | Red | Study limitations and validity threats |
+| `GAP:` | Yellow | Research gaps and future directions |
+| `METHOD:` | Grey | Study design, procedures, sample details |
+| `THEME [x]:` | Grey | Thematic categorization (e.g., `THEME [performance]:`) |
+| `STAT:` | Orange | Statistics and quantitative results |
+| `FIGURE:` | Green | Figure analysis and key visual findings |
 
 ### Color Usage by Extraction Phase
 
 - **Metadata Phase**: Not annotated (captured in notes)
-- **Evidence Phase**: Green (claims), Red (limitations), Orange (statistics)
-- **Quality Phase**: Red (biases), Yellow (gaps)
-- **Categorization Phase**: Blue/Purple/Magenta (themes), Grey (methodology)
+- **Evidence Phase**: Green (`CLAIM:`), Red (`LIMITATION:`), Orange (`STAT:`)
+- **Quality Phase**: Red (`LIMITATION:`), Yellow (`GAP:`)
+- **Categorization Phase**: Grey (`THEME [x]:`), Grey (`METHOD:`)
+- **Structure Phase**: Blue/Purple/Magenta (document headings only)
 
 ## Instructions for AI
 
@@ -208,28 +228,30 @@ When this command is invoked, execute the Literature Review methodology through 
 
 **Goal**: Tag findings by theme for synthesis matrix.
 
-1. **Apply thematic tags** using section colors:
+1. **Apply thematic tags** using Grey with `THEME [x]:` prefix:
 
-   If `theme:` argument provided, use it as primary theme (Blue):
+   If `theme:` argument provided, use it as primary theme:
    ```
    zotero_create_highlight(
      attachment_key: "<key>",
      text: "<relevant claim>",
      page: <page>,
-     color: "section1",
+     color: "detail",
      comment: "THEME [<theme name>]: <how this relates>"
    )
    ```
 
-2. **Identify emergent themes**:
-   - Performance/Effectiveness → Blue (`section1`)
-   - Methodology/Approach → Purple (`section2`)
-   - Applications/Use Cases → Magenta (`section3`)
+2. **Identify emergent themes** (all use Grey with different prefixes):
+   - Performance/Effectiveness → `THEME [performance]:`
+   - Methodology/Approach → `THEME [methodology]:`
+   - Applications/Use Cases → `THEME [applications]:`
 
 3. **Cross-reference with existing literature**:
    - Note agreements with other papers
    - Note disagreements or contradictions
    - Identify unique contributions
+
+**Note**: Section colors (Blue/Purple/Magenta) are reserved for document structure headings only. Use comment prefixes on Grey highlights for thematic categorization.
 
 ## Output: Synthesis Matrix Entry
 
@@ -276,9 +298,9 @@ After completing the review, provide a structured extraction:
 - X claims highlighted (green)
 - Y limitations marked (red)
 - Z statistics noted (orange)
-- N methodology details (grey)
+- N methodology/theme details (grey)
 - M gaps identified (yellow)
-- K thematic tags (blue/purple/magenta)
+- K structure headings (blue/purple/magenta)
 
 ### Synthesis Notes
 - **Agrees with**: [Other papers on topic]
