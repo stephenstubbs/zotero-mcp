@@ -584,19 +584,38 @@ function registerEndpoints() {
                     return;
                 }
                 
-                // Try to use BetterBibTeX API if available
+                // Call BetterBibTeX's JSON-RPC API to search by citekey
                 let item = null;
                 
-                if (typeof Zotero.BetterBibTeX !== 'undefined') {
-                    // BetterBibTeX is installed - use its API
-                    try {
-                        let result = await Zotero.BetterBibTeX.KeyManager.keys.findOne({ citekey: citekey });
-                        if (result && result.itemID) {
-                            item = await Zotero.Items.getAsync(result.itemID);
+                try {
+                    // Use fetch to call BBT's JSON-RPC endpoint
+                    let response = await fetch('http://127.0.0.1:23119/better-bibtex/json-rpc', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            jsonrpc: '2.0',
+                            method: 'item.search',
+                            params: [citekey],
+                            id: 1
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        let result = await response.json();
+                        if (result.result && result.result.length > 0) {
+                            // Extract the item key from the ID URL
+                            // Format: "http://zotero.org/users/XXXXX/items/ITEMKEY"
+                            let idUrl = result.result[0].id;
+                            let itemKey = idUrl.split('/').pop();
+                            
+                            item = await Zotero.Items.getByLibraryAndKeyAsync(
+                                Zotero.Libraries.userLibraryID,
+                                itemKey
+                            );
                         }
-                    } catch (e) {
-                        log("BetterBibTeX lookup failed: " + e);
                     }
+                } catch (e) {
+                    log("BetterBibTeX JSON-RPC lookup failed: " + e);
                 }
                 
                 // Fallback: search in extra field
