@@ -4,26 +4,26 @@
 TBD - created by archiving change add-critical-reading-workflow. Update Purpose after archive.
 ## Requirements
 ### Requirement: Read Command Definition
-The system SHALL provide a `/read` slash command for initiating critical reading workflows.
+The system SHALL provide a `/readassist-read` slash command for initiating critical reading workflows.
 
 #### Scenario: Invoke with citekey and pages
-- **WHEN** user invokes `/read smithML2023 pages:1-10 purpose:"understand methodology"`
+- **WHEN** user invokes `/readassist-read smithML2023 pages:1-10 purpose:"understand methodology"`
 - **THEN** the AI receives the command parameters and critical reading instructions
 
 #### Scenario: Invoke with citekey and chapters
-- **WHEN** user invokes `/read smithML2023 chapters:"Introduction,Methods"`
+- **WHEN** user invokes `/readassist-read smithML2023 chapters:"Introduction,Methods"`
 - **THEN** the AI receives the chapter names to look up in the PDF
 
 #### Scenario: Invoke with citekey only
-- **WHEN** user invokes `/read smithML2023`
+- **WHEN** user invokes `/readassist-read smithML2023`
 - **THEN** the AI is instructed to read the full document
 
 #### Scenario: Invoke with strategy parameter
-- **WHEN** user invokes `/read smithML2023 strategy:sq3r`
+- **WHEN** user invokes `/readassist-read smithML2023 strategy:sq3r`
 - **THEN** the AI uses the SQ3R reading methodology instead of default critical reading
 
 #### Scenario: List available strategies
-- **WHEN** user invokes `/read --help` or requests strategy list
+- **WHEN** user invokes `/readassist-read --help` or requests strategy list
 - **THEN** the available strategies are displayed: critical, sq3r, review, analyze, skim
 
 ### Requirement: Critical Reading Instructions
@@ -99,18 +99,65 @@ The slash command SHALL support an outline-first workflow for open questions rea
 The system SHALL provide dedicated commands for each reading strategy.
 
 #### Scenario: SQ3R command
-- **WHEN** user invokes `/read-sq3r citekey`
-- **THEN** it is equivalent to `/read citekey strategy:sq3r`
+- **WHEN** user invokes `/readassist-read-sq3r citekey`
+- **THEN** it is equivalent to `/readassist-read citekey strategy:sq3r`
 
 #### Scenario: Review command
-- **WHEN** user invokes `/read-review citekey`
-- **THEN** it is equivalent to `/read citekey strategy:review`
+- **WHEN** user invokes `/readassist-read-review citekey`
+- **THEN** it is equivalent to `/readassist-read citekey strategy:review`
 
 #### Scenario: Analyze command
-- **WHEN** user invokes `/read-analyze citekey`
-- **THEN** it is equivalent to `/read citekey strategy:analyze`
+- **WHEN** user invokes `/readassist-read-analyze citekey`
+- **THEN** it is equivalent to `/readassist-read citekey strategy:analyze`
 
 #### Scenario: Skim command
-- **WHEN** user invokes `/read-skim citekey`
-- **THEN** it is equivalent to `/read citekey strategy:skim`
+- **WHEN** user invokes `/readassist-read-skim citekey`
+- **THEN** it is equivalent to `/readassist-read citekey strategy:skim`
+
+### Requirement: Summarize Command Definition
+The system SHALL provide a `/readassist-summarize` slash command for generating summary notes from annotations.
+
+#### Scenario: Invoke with citekey
+- **WHEN** user invokes `/readassist-summarize smithML2023`
+- **THEN** the AI first extracts permanent notes from `IDEA:` annotations
+- **AND** then generates a structured summary note
+- **AND** the summary includes links to extracted permanent notes
+
+#### Scenario: Invoke with vault path
+- **WHEN** user invokes `/readassist-summarize smithML2023 vault:/path/to/vault`
+- **THEN** the AI uses the specified vault path to locate the annotation file
+
+#### Scenario: No IDEA annotations present
+- **WHEN** user invokes `/readassist-summarize` on annotations without `IDEA:` prefix
+- **THEN** permanent note extraction is skipped
+- **AND** the "Permanent Notes" section is omitted from output
+
+### Requirement: Synthesize Command Definition
+The system SHALL provide a `/readassist-synthesize` slash command for multi-document synthesis.
+
+#### Scenario: Invoke with multiple citekeys
+- **WHEN** user invokes `/readassist-synthesize smithML2023 jonesAI2024 brownDeep2023`
+- **THEN** the AI first extracts permanent notes from `IDEA:` annotations in each source
+- **AND** then creates a synthesis note
+- **AND** the synthesis includes links to extracted permanent notes grouped by source
+
+#### Scenario: Invoke with theme
+- **WHEN** user invokes `/readassist-synthesize smithML2023 jonesAI2024 theme:"methodology"`
+- **THEN** the AI focuses the synthesis on the specified theme
+
+#### Scenario: No IDEA annotations in any source
+- **WHEN** user invokes `/readassist-synthesize` on sources without `IDEA:` annotations
+- **THEN** permanent note extraction is skipped for those sources
+- **AND** the "Permanent Notes" section is omitted if no notes were extracted
+
+### Requirement: Zettel Command Definition
+The system SHALL provide a `/readassist-permanent-note` slash command for extracting permanent notes from IDEA-marked annotations.
+
+#### Scenario: Invoke with citekey
+- **WHEN** user invokes `/readassist-permanent-note smithML2023`
+- **THEN** the AI extracts annotations with `IDEA:` prefix and creates permanent notes
+
+#### Scenario: Invoke with output folder
+- **WHEN** user invokes `/readassist-permanent-note smithML2023 output:Permanent/`
+- **THEN** the AI creates permanent notes in the specified folder
 

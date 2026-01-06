@@ -21,19 +21,27 @@ The user's existing workflow uses **Zotero Integration** plugin in Obsidian to i
 
 ## What Changes
 
-1. **Obsidian Integration** - Tools to read/write Obsidian vault files
-   - Tool: `obsidian_read_annotations` - Parse annotation file for a citekey
-   - Tool: `obsidian_write_note` - Create/update markdown notes
-   - Tool: `obsidian_list_annotation_files` - Find annotation files in vault
-
-2. **Synthesis Commands** - Slash commands for multi-document workflows
-   - `/synthesize` - Synthesize annotations across multiple citekeys from Obsidian
+1. **Slash Commands** - AI-guided workflows using native file tools
    - `/summarize` - Generate summary from single document's Obsidian annotations
+   - `/synthesize` - Synthesize annotations across multiple citekeys from Obsidian
 
-3. **Obsidian Note Templates** - Output formats matching Obsidian conventions
+2. **Obsidian Note Templates** - Output formats matching Obsidian conventions
    - Wikilinks to source annotation files
    - Dataview-compatible frontmatter
    - Callout blocks for structured content
+
+## Approach: Slash Commands Only (No MCP Tools)
+
+Since Obsidian vaults are just filesystem directories, we use **slash commands** that instruct the AI to:
+- Use the `Read` tool to read annotation files directly
+- Parse annotations using documented regex patterns
+- Write synthesis notes using the `Write` tool
+
+This is simpler than adding MCP tools because:
+- No new Rust code required
+- Leverages AI's native file capabilities  
+- Easier to customize (edit markdown, not code)
+- Faster to implement
 
 ## Workflow
 
@@ -43,41 +51,38 @@ Zotero (annotations)
     ▼ (Zotero Integration plugin - existing)
 Obsidian (annotation markdown files)
     │
-    ▼ (Phase 4 - NEW)
+    ▼ (Slash commands - NEW)
 Obsidian (synthesis notes)
 ```
 
 The AI:
-1. Reads annotation files from Obsidian vault
+1. Reads annotation files from Obsidian vault using `Read` tool
 2. Parses annotations with their colors, text, and page references
 3. Synthesizes across documents
-4. Writes new notes to Obsidian vault
+4. Writes new notes to Obsidian vault using `Write` tool
 
 ## Impact
 
-- **New specs**: `obsidian-integration`, `note-synthesis`
-- **Modified specs**: `mcp-server` (new tools)
+- **New specs**: `note-synthesis` (slash command requirements only)
+- **Removed**: `obsidian-integration` spec (no MCP tools needed)
+- **Removed**: `mcp-server` spec changes (no new tools)
 - **New files**:
-  - `.opencode/commands/synthesize.md`
-  - `.opencode/commands/summarize.md`
-- **Configuration**: Obsidian vault path setting
+  - `.opencode/command/synthesize.md`
+  - `.opencode/command/summarize.md`
+- **Configuration**: Obsidian vault path via environment variable or user-provided path
 
 ## Dependencies
 
-- **Requires**: Phase 1 (`add-critical-reading-workflow`) must be complete
 - **Requires**: User has Zotero Integration plugin configured in Obsidian
 - **Enhanced by**: Phase 3 (`add-reading-strategies`) for strategy-specific synthesis
 
 ## Open Questions
 
 1. How to locate the Obsidian vault?
-   - **Recommendation**: Environment variable `OBSIDIAN_VAULT_PATH` or config file
+   - **Answer**: User provides path in command or environment variable `OBSIDIAN_VAULT_PATH`
 
 2. Where should synthesis notes be created?
-   - **Recommendation**: Configurable folder, default to `Synthesis/` in vault
+   - **Answer**: User specifies output path, or default to `Synthesis/` folder in vault
 
-3. Should we parse the Zotero Integration template or use a standard format?
-   - **Recommendation**: Parse the user's actual template (provided above) for maximum compatibility
-
-4. How to handle updates when annotations change?
-   - **Recommendation**: Synthesis notes are regenerated, not incrementally updated
+3. How to handle updates when annotations change?
+   - **Answer**: Synthesis notes are regenerated, not incrementally updated

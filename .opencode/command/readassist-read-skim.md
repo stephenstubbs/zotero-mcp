@@ -1,12 +1,12 @@
 ---
 description: Quick skim strategy for rapid relevance assessment and key point extraction.
 ---
-Execute the /read-skim command with the following arguments:
+Execute the /readassist-read-skim command with the following arguments:
 <UserRequest>
   $ARGUMENTS
 </UserRequest>
 
-# /read-skim - Skim Reading Strategy
+# /readassist-read-skim - Skim Reading Strategy
 
 ## Overview
 
@@ -15,7 +15,7 @@ The Skim strategy is designed for rapid assessment of a paper's relevance and ke
 ## Usage
 
 ```
-/read-skim <citekey> [time:<minutes>] [focus:<topic>]
+/readassist-read-skim <citekey> [time:<minutes>] [focus:<topic>]
 ```
 
 ## Arguments
@@ -27,9 +27,9 @@ The Skim strategy is designed for rapid assessment of a paper's relevance and ke
 ## Examples
 
 ```
-/read-skim smithML2023
-/read-skim jonesNLP2024 time:5m
-/read-skim brownStats2023 time:10m focus:"neural networks"
+/readassist-read-skim smithML2023
+/readassist-read-skim jonesNLP2024 time:5m
+/readassist-read-skim brownStats2023 time:10m focus:"neural networks"
 ```
 
 ## Time Budgets

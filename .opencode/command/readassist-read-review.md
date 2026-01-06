@@ -1,12 +1,12 @@
 ---
 description: Literature review strategy for systematic evidence extraction and synthesis.
 ---
-Execute the /read-review command with the following arguments:
+Execute the /readassist-read-review command with the following arguments:
 <UserRequest>
   $ARGUMENTS
 </UserRequest>
 
-# /read-review - Literature Review Strategy
+# /readassist-read-review - Literature Review Strategy
 
 ## Overview
 
@@ -15,7 +15,7 @@ The Literature Review strategy is designed for systematic evidence extraction fr
 ## Usage
 
 ```
-/read-review <citekey> [pages:<range>] [extraction:<types>] [theme:<topic>]
+/readassist-read-review <citekey> [pages:<range>] [extraction:<types>] [theme:<topic>]
 ```
 
 ## Arguments
@@ -28,9 +28,9 @@ The Literature Review strategy is designed for systematic evidence extraction fr
 ## Examples
 
 ```
-/read-review smithML2023
-/read-review jonesNLP2024 extraction:"methods,findings" theme:"transformer models"
-/read-review brownStats2023 pages:1-15 theme:"regression analysis"
+/readassist-read-review smithML2023
+/readassist-read-review jonesNLP2024 extraction:"methods,findings" theme:"transformer models"
+/readassist-read-review brownStats2023 pages:1-15 theme:"regression analysis"
 ```
 
 ## Color Scheme for Literature Review

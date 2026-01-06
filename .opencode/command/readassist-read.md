@@ -1,17 +1,17 @@
 ---
 description: Initiate an AI-assisted critical reading session for a Zotero item.
 ---
-Execute the /read command with the following arguments:
+Execute the /readassist-read command with the following arguments:
 <UserRequest>
   $ARGUMENTS
 </UserRequest>
 
-# /read - Critical Reading Workflow
+# /readassist-read - Critical Reading Workflow
 
 ## Usage
 
 ```
-/read <citekey> [pages:<range>] [chapters:<names>] [from_page:<N>] [purpose:<text>] [strategy:<name>]
+/readassist-read <citekey> [pages:<range>] [chapters:<names>] [from_page:<N>] [purpose:<text>] [strategy:<name>]
 ```
 
 ## Arguments
@@ -27,25 +27,25 @@ Execute the /read command with the following arguments:
 
 | Strategy | Command | Best For |
 |----------|---------|----------|
-| `critical` | `/read` (default) | General critical reading and analysis |
-| `sq3r` | `/read-sq3r` | Textbook learning, deep comprehension |
-| `review` | `/read-review` | Literature review, evidence extraction |
-| `analyze` | `/read-analyze` | Argument analysis, philosophical texts |
-| `skim` | `/read-skim` | Quick relevance assessment |
+| `critical` | `/readassist-read` (default) | General critical reading and analysis |
+| `sq3r` | `/readassist-read-sq3r` | Textbook learning, deep comprehension |
+| `review` | `/readassist-read-review` | Literature review, evidence extraction |
+| `analyze` | `/readassist-read-analyze` | Argument analysis, philosophical texts |
+| `skim` | `/readassist-read-skim` | Quick relevance assessment |
 
-Each strategy has a dedicated command file with detailed instructions. Use `/read strategy:<name>` for quick access or the dedicated commands for full documentation.
+Each strategy has a dedicated command file with detailed instructions. Use `/readassist-read strategy:<name>` for quick access or the dedicated commands for full documentation.
 
 ## Examples
 
 ```
-/read smithML2023 pages:1-10 purpose:"understand methodology"
-/read jonesDeepLearning2024 chapters:"Introduction,Results"
-/read brownNLP2023
-/read brownNLP2023 from_page:1
-/read smithTextbook2023 strategy:sq3r
-/read jonesResearch2024 strategy:review
-/read brownPhilosophy2023 strategy:analyze
-/read smithPaper2024 strategy:skim
+/readassist-read smithML2023 pages:1-10 purpose:"understand methodology"
+/readassist-read jonesDeepLearning2024 chapters:"Introduction,Results"
+/readassist-read brownNLP2023
+/readassist-read brownNLP2023 from_page:1
+/readassist-read smithTextbook2023 strategy:sq3r
+/readassist-read jonesResearch2024 strategy:review
+/readassist-read brownPhilosophy2023 strategy:analyze
+/readassist-read smithPaper2024 strategy:skim
 ```
 
 ## Instructions for AI
@@ -65,10 +65,10 @@ If a `strategy:` parameter is provided, use the corresponding methodology:
 | Strategy Value | Behavior |
 |----------------|----------|
 | `critical` or not specified | Use the default critical reading workflow below |
-| `sq3r` | Follow the `/read-sq3r` methodology (Survey, Question, Read, Recite, Review) |
-| `review` | Follow the `/read-review` methodology (Evidence extraction for literature review) |
-| `analyze` | Follow the `/read-analyze` methodology (Deep argument analysis) |
-| `skim` | Follow the `/read-skim` methodology (Quick relevance assessment) |
+| `sq3r` | Follow the `/readassist-read-sq3r` methodology (Survey, Question, Read, Recite, Review) |
+| `review` | Follow the `/readassist-read-review` methodology (Evidence extraction for literature review) |
+| `analyze` | Follow the `/readassist-read-analyze` methodology (Deep argument analysis) |
+| `skim` | Follow the `/readassist-read-skim` methodology (Quick relevance assessment) |
 
 **Invalid strategy**: If an unknown strategy is specified, inform the user:
 ```
@@ -79,7 +79,7 @@ Unknown strategy "[name]". Available strategies:
 - analyze: Deep argument analysis
 - skim: Quick relevance assessment
 
-Use /read --help or see strategy-specific commands (/read-sq3r, /read-review, etc.) for details.
+Use /readassist-read --help or see strategy-specific commands (/readassist-read-sq3r, /readassist-read-review, etc.) for details.
 ```
 
 ### Default Critical Reading Workflow
@@ -289,6 +289,40 @@ These colors mark content meaning. Use **comment prefixes** to sub-categorize:
 | `detail` | #aaaaaa (Grey) | Semantic | Assumptions, definitions, connections, methodology, themes | `ASSUMPTION:`, `TERM:`, `CONNECTION:`, `METHOD:`, `THEME [x]:`, `DETAIL:` |
 | `code` | #f19837 (Orange) | Semantic | Code, statistics, formulas, data | `STAT:`, `CODE:`, `DATA:` |
 
+### Cross-Cutting Prefix: IDEA:
+
+The `IDEA:` prefix is special - it can be **added before any other prefix** to mark annotations that contain atomic ideas suitable for Zettelkasten permanent notes.
+
+**Usage:** Add `IDEA:` at the start of any comment (before other prefixes) when you encounter a standalone insight worth extracting as a permanent note.
+
+| Format | Example Comment |
+|--------|-----------------|
+| `IDEA:` alone | `IDEA: Transfer learning trades data for compute` |
+| `IDEA:` + `FINDING:` | `IDEA: FINDING: Transfer learning reduces data needs by 60%` |
+| `IDEA:` + `CLAIM:` | `IDEA: CLAIM: Attention is all you need for sequence modeling` |
+| `IDEA:` + `LIMITATION:` | `IDEA: LIMITATION: Sample size invalidates cross-domain claims` |
+| `IDEA:` + `GAP:` | `IDEA: GAP: No studies examine long-term effects` |
+| `IDEA:` + `METHOD:` | `IDEA: METHOD: Curriculum learning improves convergence` |
+| `IDEA:` + `STAT:` | `IDEA: STAT: O(n log n) complexity enables real-time processing` |
+
+**How commands parse IDEA: prefix:**
+- `/readassist-permanent-note`: Looks for `IDEA:` at start, extracts the annotation as a permanent note
+- `/readassist-summarize`: First extracts permanent notes from `IDEA:` annotations, then generates summary with links to them
+- `/readassist-synthesize`: First extracts permanent notes from `IDEA:` annotations in all sources, then generates synthesis with links to them
+
+**Zettelkasten Workflow:**
+1. During `/readassist-read`, mark atomic ideas with `IDEA:` prefix (before any other prefix)
+2. Run `/readassist-summarize <citekey>` or `/readassist-synthesize <citekeys...>`
+3. Permanent notes are automatically extracted from `IDEA:`-prefixed annotations
+4. Each idea becomes a standalone permanent note in `Permanent/` folder
+5. The summary/synthesis includes links to the permanent notes
+
+**What makes a good IDEA: annotation:**
+- **Atomic**: Contains exactly one idea
+- **Rewritten**: In your own words, not just a quote
+- **Self-contained**: Understandable without the source context
+- **Linkable**: Could connect to other ideas in your knowledge base
+
 ### Obsidian Integration
 
 The Obsidian Zotero import template generates markdown headings from section colors:
@@ -300,7 +334,7 @@ Magenta highlight → #### Highlighted Text
 
 This means section colors should mark **actual document structure** (chapter titles, section names) rather than semantic content types.
 
-**Note**: Different reading strategies may interpret semantic colors differently. See strategy-specific command files (e.g., `/read-sq3r`, `/read-review`) for their specific color mappings and comment prefixes.
+**Note**: Different reading strategies may interpret semantic colors differently. See strategy-specific command files (e.g., `/readassist-read-sq3r`, `/readassist-read-review`) for their specific color mappings and comment prefixes.
 
 ## Fallback Behavior: No Outline Available
 
@@ -354,7 +388,7 @@ After completing the reading session, provide:
 ## Example Workflow: Reading with Images
 
 ```
-User: /read smithML2023 chapters:"Results"
+User: /readassist-read smithML2023 chapters:"Results"
 
 AI Process:
 1. zotero_lookup("smithML2023") → Get attachment_key

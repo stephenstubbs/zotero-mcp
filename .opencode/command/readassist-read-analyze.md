@@ -1,12 +1,12 @@
 ---
 description: Analytical reading strategy for deep argument analysis and critical evaluation.
 ---
-Execute the /read-analyze command with the following arguments:
+Execute the /readassist-read-analyze command with the following arguments:
 <UserRequest>
   $ARGUMENTS
 </UserRequest>
 
-# /read-analyze - Analytical Reading Strategy
+# /readassist-read-analyze - Analytical Reading Strategy
 
 ## Overview
 
@@ -15,7 +15,7 @@ Analytical Reading (based on Mortimer Adler's levels of reading) is designed for
 ## Usage
 
 ```
-/read-analyze <citekey> [pages:<range>] [chapters:<names>] [depth:<level>]
+/readassist-read-analyze <citekey> [pages:<range>] [chapters:<names>] [depth:<level>]
 ```
 
 ## Arguments
@@ -36,9 +36,9 @@ Analytical Reading (based on Mortimer Adler's levels of reading) is designed for
 ## Examples
 
 ```
-/read-analyze smithPhilosophy2023 depth:deep
-/read-analyze jonesTheory2024 chapters:"Argument,Discussion" depth:moderate
-/read-analyze brownPosition2023 pages:1-20 depth:surface
+/readassist-read-analyze smithPhilosophy2023 depth:deep
+/readassist-read-analyze jonesTheory2024 chapters:"Argument,Discussion" depth:moderate
+/readassist-read-analyze brownPosition2023 pages:1-20 depth:surface
 ```
 
 ## Color Scheme for Analytical Reading

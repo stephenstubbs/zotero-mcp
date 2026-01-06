@@ -1,12 +1,12 @@
 ---
 description: SQ3R reading methodology for deep textbook comprehension.
 ---
-Execute the /read-sq3r command with the following arguments:
+Execute the /readassist-read-sq3r command with the following arguments:
 <UserRequest>
   $ARGUMENTS
 </UserRequest>
 
-# /read-sq3r - SQ3R Reading Strategy
+# /readassist-read-sq3r - SQ3R Reading Strategy
 
 ## Overview
 
@@ -15,7 +15,7 @@ SQ3R (Survey, Question, Read, Recite, Review) is a structured reading methodolog
 ## Usage
 
 ```
-/read-sq3r <citekey> [pages:<range>] [chapters:<names>] [focus:<topic>]
+/readassist-read-sq3r <citekey> [pages:<range>] [chapters:<names>] [focus:<topic>]
 ```
 
 ## Arguments
@@ -28,9 +28,9 @@ SQ3R (Survey, Question, Read, Recite, Review) is a structured reading methodolog
 ## Examples
 
 ```
-/read-sq3r smithTextbook2023 chapters:"Chapter 3"
-/read-sq3r jonesStatistics2024 pages:45-60 focus:"hypothesis testing"
-/read-sq3r brownML2023 chapters:"Neural Networks,Backpropagation"
+/readassist-read-sq3r smithTextbook2023 chapters:"Chapter 3"
+/readassist-read-sq3r jonesStatistics2024 pages:45-60 focus:"hypothesis testing"
+/readassist-read-sq3r brownML2023 chapters:"Neural Networks,Backpropagation"
 ```
 
 ## Color Scheme for SQ3R
